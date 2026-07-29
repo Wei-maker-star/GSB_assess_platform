@@ -86,6 +86,7 @@
   <style>
     /* ---- 登录注册 + 角色选择 + 用户信息 ---- */
     .auth-gate{position:fixed;inset:0;background:linear-gradient(135deg,#155e45 0%,#0f3d2c 100%);z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px}
+    .auth-gate[hidden]{display:none}
     .auth-gate .card{background:#fefffb;border-radius:16px;padding:36px 32px;max-width:400px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.25)}
     .auth-gate h1{font-size:22px;margin:0 0 6px;color:var(--ink);text-align:center}
     .auth-gate .sub-hint{font-size:13px;color:var(--muted);margin:0 0 20px;text-align:center;line-height:1.6}
@@ -100,6 +101,7 @@
     .auth-submit:hover{background:#104a36}
     .auth-error{color:#c0392b;font-size:12px;margin-top:8px;min-height:16px;text-align:center}
     .role-gate{position:fixed;inset:0;background:linear-gradient(135deg,#155e45 0%,#0f3d2c 100%);z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px}
+    .role-gate[hidden]{display:none}
     .role-gate .card{background:#fefffb;border-radius:16px;padding:36px 32px;max-width:420px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.25);text-align:center}
     .role-gate h1{font-size:22px;margin:0 0 8px;color:var(--ink)}
     .role-gate p{font-size:13px;color:var(--muted);margin:0 0 18px;line-height:1.6}
