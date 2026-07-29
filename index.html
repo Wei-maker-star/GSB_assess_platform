@@ -1708,10 +1708,66 @@
       return data;
     }
 
-    /* -------- 飞书 Sheets URL 一键导入（保留，需手动传 access_token）-------- */
+    /* -------- 飞书 OAuth Token 管理 -------- */
+    const FS_TOKEN_KEY = 'fsToken';
+    const FS_TOKEN_EXPIRE_KEY = 'fsTokenExpire';
+    const FS_PENDING_ACTION_KEY = 'fsPendingAction'; // 记住授权前要做什么
+
+    const FS_OAUTH_URL = 'https://open.feishu.cn/open-apis/authen/v1/authorize'
+      + '?app_id=cli_aae3d417d878dbd8'
+      + '&redirect_uri=' + encodeURIComponent(location.origin + '/api/feishu/callback')
+      + '&scope=bitable:app%20sheets:spreadsheet%20contact:user.base:readonly'
+      + '&response_type=code';
+
+    function getFsToken(){
+      const token = localStorage.getItem(FS_TOKEN_KEY);
+      const expire = parseInt(localStorage.getItem(FS_TOKEN_EXPIRE_KEY) || '0', 10);
+      if(token && Date.now() < expire) return token;
+      // 过期或不存在
+      localStorage.removeItem(FS_TOKEN_KEY);
+      localStorage.removeItem(FS_TOKEN_EXPIRE_KEY);
+      return null;
+    }
+    function saveFsToken(token, expiresIn){
+      localStorage.setItem(FS_TOKEN_KEY, token);
+      // 提前 5 分钟标记过期
+      localStorage.setItem(FS_TOKEN_EXPIRE_KEY, String(Date.now() + (expiresIn - 300) * 1000));
+    }
+    function requireFsToken(pendingAction){
+      // 记住用户本来想做什么，授权完跳回来后继续
+      localStorage.setItem(FS_PENDING_ACTION_KEY, pendingAction);
+      location.href = FS_OAUTH_URL;
+    }
+
+    // 页面加载时检查 URL hash 里是否有回调 token
+    (function checkFsTokenFromHash(){
+      const hash = location.hash;
+      if(!hash || !hash.includes('fs_token=')) return;
+      const params = new URLSearchParams(hash.replace('#',''));
+      const token = params.get('fs_token');
+      const expires = parseInt(params.get('fs_expires') || '7200', 10);
+      if(token){
+        saveFsToken(token, expires);
+        showToast('飞书授权成功');
+      }
+      // 清除 hash
+      history.replaceState(null, '', location.pathname + location.search);
+      // 检查是否有待执行的操作
+      const pending = localStorage.getItem(FS_PENDING_ACTION_KEY);
+      if(pending){
+        localStorage.removeItem(FS_PENDING_ACTION_KEY);
+        // 延迟执行，等页面初始化完毕
+        setTimeout(() => {
+          if(pending === 'import') document.querySelector('#fetchFeishu').click();
+          else if(pending === 'export') document.querySelector('#syncBitable').click();
+        }, 500);
+      }
+    })();
+
+    /* -------- 飞书 Sheets URL 一键导入 -------- */
     document.querySelector('#fetchFeishu').addEventListener('click', async () => {
-      const tokenInput = prompt('请输入飞书 user_access_token（从飞书开放平台获取）：');
-      if(!tokenInput){ showToast('已取消'); return; }
+      const token = getFsToken();
+      if(!token){ requireFsToken('import'); return; }
       const url = document.querySelector('#feishuUrl').value.trim();
       if(!url){ showToast('请粘贴飞书表格链接'); return; }
 
@@ -1721,7 +1777,7 @@
       btn.textContent = '⏳ 拉取中...';
       try {
         const resp = await apiPost('/api/feishu/sheets/read', {
-          access_token: tokenInput,
+          access_token: token,
           url_or_token: url
         });
         const values = resp.values || [];
@@ -1751,10 +1807,10 @@
       }
     });
 
-    /* -------- 飞书 Bitable 同步导出（保留，需手动传 access_token）-------- */
+    /* -------- 飞书 Bitable 同步导出 -------- */
     document.querySelector('#syncBitable').addEventListener('click', async () => {
-      const tokenInput = prompt('请输入飞书 user_access_token（从飞书开放平台获取）：');
-      if(!tokenInput){ showToast('已取消'); return; }
+      const token = getFsToken();
+      if(!token){ requireFsToken('export'); return; }
       const task = getTask(currentTaskId);
       if(!task){ showToast('未选择任务'); return; }
 
@@ -1802,7 +1858,7 @@
       btn.textContent = '⏳ 同步中...';
       try {
         const resp = await apiPost('/api/feishu/bitable/append', {
-          access_token: tokenInput,
+          access_token: token,
           app_token_or_url: appUrl,
           table_id: tableId,
           records: rows

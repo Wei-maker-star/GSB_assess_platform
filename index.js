@@ -314,6 +314,47 @@ app.post('/api/feishu/proxy', async (req, res) => {
 // 健康检查
 app.get('/api/health', (req, res) => res.json({ ok: true, ts: Date.now(), app_id: FEISHU_APP_ID }));
 
+/**
+ * 飞书 OAuth 回调：用 code 换 user_access_token，然后 302 跳回前端并带 hash 参数
+ * 飞书授权页跳回 /api/feishu/callback?code=xxx
+ */
+app.get('/api/feishu/callback', async (req, res) => {
+  try {
+    const { code } = req.query;
+    if (!code) return res.status(400).send('missing code');
+
+    const appToken = await getAppAccessToken();
+
+    // 用 code 换 user_access_token
+    const tokenResp = await feishuFetch('/open-apis/authen/v1/oidc/access_token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${appToken}`
+      },
+      body: JSON.stringify({ grant_type: 'authorization_code', code })
+    });
+
+    if (tokenResp.data.code !== 0) {
+      return res.status(400).json({ error: 'oauth failed', detail: tokenResp.data });
+    }
+
+    const d = tokenResp.data.data || {};
+    const accessToken = d.access_token || '';
+    const expiresIn = d.expires_in || 7200;
+
+    // 拼接 hash 参数跳回前端首页
+    const origin = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : (req.headers.referer ? new URL(req.headers.referer).origin : `http://localhost:${PORT}`);
+    const redirectUrl = `${origin}/#fs_token=${encodeURIComponent(accessToken)}&fs_expires=${expiresIn}`;
+    res.redirect(302, redirectUrl);
+  } catch (err) {
+    console.error('/api/feishu/callback', err);
+    res.status(500).send('OAuth callback error: ' + err.message);
+  }
+});
+
 // 本地开发直接监听端口；Vercel 上作为 serverless function 使用
 const PORT = process.env.PORT || 3000;
 if (require.main === module) {
