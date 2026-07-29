@@ -1,0 +1,1541 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GSB Eval · 评估平台</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
+  <style>
+    :root { --ink:#18231d; --muted:#68736c; --line:#dbe2db; --paper:#f7f8f4; --white:#fefffb; --moss:#155e45; --moss-dark:#104a36; --lime:#d9f45f; --sand:#f0eadc; --rose:#fce7dc; --blue:#e7effa; }
+    * { box-sizing:border-box; } body { margin:0; color:var(--ink); background:var(--paper); font-family:"Noto Sans SC",sans-serif; font-size:14px; }
+    button,input { font:inherit; } button { cursor:pointer; border:0; }
+    .app { min-height:100vh; display:grid; grid-template-columns:244px minmax(0,1fr); }
+    .side { background:#f0f3ed; border-right:1px solid var(--line); padding:28px 16px; display:flex; flex-direction:column; position:sticky; top:0; height:100vh; }
+    .brand { display:flex; align-items:center; gap:10px; padding:0 8px 34px; font-weight:800; letter-spacing:-.04em; font-size:19px; }
+    .mark { width:27px; height:27px; border-radius:9px 9px 9px 2px; background:var(--moss); position:relative; } .mark:after {content:"";position:absolute;width:8px;height:8px;right:5px;top:5px;border-radius:50%;background:var(--lime)}
+    .eyebrow { color:#829087; font:500 10px "DM Mono",monospace; letter-spacing:.08em; text-transform:uppercase; padding:0 8px; margin-bottom:9px; }
+    nav { display:grid; gap:3px; } .nav-item { text-align:left; border-radius:9px; padding:11px 10px; color:#526057; background:transparent; display:flex; gap:11px; align-items:center; font-weight:600; } .nav-item svg { width:18px; } .nav-item.active { background:var(--white); color:var(--ink); box-shadow:0 1px 1px #d8ded7; }
+    .side-foot { margin-top:auto; border-top:1px solid var(--line); padding:18px 8px 0; display:flex; align-items:center; gap:10px; color:#4e5b52; font-size:12px; } .avatar { width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#cfe3d4;color:#19523f;font-size:11px;font-weight:800; }
+    main { min-width:0; } .topbar { height:80px; display:flex; align-items:center; justify-content:space-between; padding:0 clamp(24px,4vw,64px); border-bottom:1px solid var(--line); background:color-mix(in srgb,var(--paper) 88%,white); }
+    .crumb { color:var(--muted); font-size:13px; } .crumb strong { color:var(--ink); } .top-actions { display:flex; gap:9px; align-items:center; } .icon-btn { width:34px;height:34px;border:1px solid var(--line);background:var(--white);border-radius:8px;color:#536158;display:grid;place-items:center; }
+    .button { background:var(--moss); color:white; padding:10px 14px; border-radius:8px; font-weight:700; transition:.18s ease; } .button:hover { background:var(--moss-dark); transform:translateY(-1px); } .button.light { background:var(--white); color:var(--ink); border:1px solid var(--line); }
+    .button.danger { background:#c0392b; } .button.danger:hover { background:#a93226; }
+    .page { padding:clamp(28px,4vw,56px) clamp(24px,4vw,64px); max-width:1560px; margin:auto; } .page-head { display:flex; align-items:end; justify-content:space-between; gap:20px; margin-bottom:32px; flex-wrap:wrap; } h1 { font:600 clamp(27px,3vw,40px)/1.16 "Source Serif 4",serif; letter-spacing:-.04em; margin:0 0 9px; } .sub { margin:0;color:var(--muted); }
+    .tabs { display:flex; border-bottom:1px solid var(--line); gap:23px; margin-bottom:23px; } .tab { background:transparent; padding:0 0 12px; color:#79847c; font-weight:700; position:relative; } .tab.active { color:var(--ink); } .tab.active:after { content:"";position:absolute;bottom:-1px;left:0;right:0;height:2px;background:var(--moss); }
+    .filters { display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin-bottom:20px; } .filter { border:1px solid var(--line); background:var(--white); color:#536158; padding:8px 11px; border-radius:7px; font-size:12px; cursor:pointer; } .filter.selected { border-color:#9fbea9;background:#edf7ee;color:var(--moss);font-weight:700; }
+    .task-table { border-top:1px solid var(--line); } .task-row { display:grid; grid-template-columns:minmax(250px,2.1fr) 1fr 1fr 1fr 1fr 34px; align-items:center; gap:18px; padding:19px 12px; border-bottom:1px solid var(--line); background:transparent; transition:.15s; } .task-row:hover {background:var(--white);} .task-title { font-weight:700; margin-bottom:4px; }.task-id,.small {font:11px "DM Mono",monospace;color:#7d8980}.status { display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;}.dot {width:7px;height:7px;border-radius:50%;background:#97a39a}.dot.green {background:#42a771}.dot.amber{background:#dfaa35}.role { color:#566259; font-size:12px; } .open { color:var(--moss);background:transparent;font-size:19px; cursor:pointer; }
+    .task-delete { color:#c0392b;background:transparent;font-size:14px;cursor:pointer;padding:0 4px; }
+        .eval { display: grid; grid-template-columns:200px minmax(0,1fr) 260px; gap:16px; align-items:start; }
+        .left-panel { overflow:hidden; }
+        .compare { min-width:0; }
+        .panel { background:var(--white); border:1px solid var(--line); border-radius:12px; } .panel-label { padding:15px 16px 11px;color:#7b887f;font:500 10px "DM Mono",monospace;letter-spacing:.08em;border-bottom:1px solid var(--line); } .question {padding:13px 16px;border-bottom:1px solid var(--line); cursor:pointer;display:flex;gap:11px;align-items:flex-start;transition:.15s;}.question:hover{background:#f4f6f1}.question.active { background:#eef7ed; box-shadow:inset 3px 0 var(--moss); }.q-num{color:#879389;font:11px "DM Mono",monospace;padding-top:3px;min-width:20px}.q-copy{font-size:12px;line-height:1.5;font-weight:600;flex:1}.q-status{font-size:10px;margin-top:2px}.q-status.done{color:var(--moss)}.q-status.todo{color:#b0b8b2}
+    .profile{padding:15px 16px;border-top:1px solid var(--line)}.profile h3{font-size:13px;margin:0 0 12px}.tag{display:inline-block;font-size:11px;padding:4px 7px;margin:0 5px 6px 0;border-radius:4px;background:var(--sand);color:#765e42}.profile-note{font-size:12px;color:var(--muted);line-height:1.6;margin:8px 0 0}
+    .compare-top { display:flex;align-items:center;justify-content:space-between;margin-bottom:15px; }.compare-top h2 {font-size:14px;margin:0}.counter {font:11px "DM Mono",monospace;color:#748078}.phones {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;position:relative;z-index:1;align-items:stretch}.phone-wrap{text-align:center;position:relative;z-index:2;min-width:0;display:flex;flex-direction:column}.answer-label {font:700 12px "DM Mono",monospace;letter-spacing:.06em;margin-bottom:9px;flex-shrink:0;height:20px}.answer-label span{margin-left:7px;font:500 11px "Noto Sans SC",sans-serif;color:#7e8981;letter-spacing:0}
+    .phone{margin:0 auto;text-align:left;width:100%;max-width:420px;height:620px;border:6px solid #1a1a1a;border-radius:32px;background:#1a1a1a;box-shadow:0 20px 60px rgba(0,0,0,.25),inset 0 0 0 2px #333;overflow:hidden;position:relative;display:flex;flex-direction:column;z-index:3;isolation:isolate;flex-shrink:0}
+    .phone-notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:110px;height:22px;background:#1a1a1a;border-radius:0 0 14px 14px;z-index:20;pointer-events:none}
+    .phone-notch::after{content:"";position:absolute;top:6px;left:50%;transform:translateX(-50%);width:8px;height:8px;border-radius:50%;background:#2a2a2a;border:1.5px solid #333}
+    .phone-status{height:32px;padding:6px 18px 4px;display:flex;justify-content:space-between;align-items:center;background:#fff;position:relative;z-index:5;flex-shrink:0;border-bottom:1px solid #f0f0f0}
+    .phone-status .status-time{font:600 13px/1 -apple-system,sans-serif;color:#000}
+    .phone-status .status-icons{display:flex;gap:4px;align-items:center}
+    .phone-status .status-icons svg{width:14px;height:10px;fill:#000}
+    .answer{padding:12px 12px 20px;overflow-y:auto;flex:1;font-size:13px;line-height:1.7;background:#fff;-webkit-overflow-scrolling:touch;min-width:0;scrollbar-width:none;-ms-overflow-style:none;word-break:normal;overflow-wrap:break-word}
+    .answer::-webkit-scrollbar{display:none;width:0;height:0}
+    .answer *{max-width:100%;box-sizing:border-box;word-break:normal;overflow-wrap:break-word}
+    .answer h1{font-size:17px;margin:0 0 10px;font-weight:700}.answer h2{font-size:15px;margin:14px 0 8px;font-weight:700}.answer h3{font-size:14px;line-height:1.35;margin:12px 0 8px;font-weight:700;letter-spacing:-.02em}
+    .answer p{margin:0 0 10px;word-wrap:break-word;overflow-wrap:break-word}.answer strong{color:#154d3a;font-weight:700}.answer em{font-style:italic;color:#555}
+    .answer ul,.answer ol{padding-left:18px;margin:6px 0 12px}.answer li{margin:3px 0;line-height:1.55;word-wrap:break-word}
+    .answer table{width:100%;border-collapse:collapse;margin:10px 0;font-size:11px;table-layout:fixed;word-wrap:break-word}.answer th,.answer td{border:1px solid #e5e5e5;padding:5px 6px;text-align:left;word-break:break-word}.answer th{background:#f5f5f5;font-weight:600}
+    .answer blockquote{border-left:3px solid #bbdb5b;background:#f6f9ea;padding:6px 10px;margin:10px 0;color:#516058;font-size:12px}
+    .answer code{background:#f0f3ed;padding:1px 4px;border-radius:3px;font-size:11px;font-family:"DM Mono",monospace;word-break:break-all}
+    .answer pre{background:#f0f3ed;padding:10px;border-radius:6px;overflow-x:auto;margin:10px 0;font-size:11px}.answer pre code{padding:0;background:none;word-break:normal}
+    .answer hr{border:none;height:1px;background:#e6e9e4;margin:14px 0}
+    .answer .md-mark{background:linear-gradient(180deg,transparent 40%,#fef3a2 40%);padding:1px 2px;border-radius:2px}
+    .answer .md-sup{display:inline-flex;align-items:center;gap:1px;vertical-align:super;font-size:9px;color:#1a73e8;font-weight:600;margin:0 1px}.md-sup-item{background:#e8f0fe;border-radius:3px;padding:0 3px;line-height:1.4}
+    .answer .ad-card{border:1px solid #f0f0f0;border-radius:12px;padding:10px;margin:12px 0;background:#fff;display:flex;gap:10px;align-items:flex-start;position:relative;overflow:hidden;max-width:100%;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+    .ad-card .ad-img{width:64px;height:64px;border-radius:8px;background:#f5f5f5;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;color:#ccc;overflow:hidden}
+    .ad-card .ad-thumb{width:100%;height:100%;object-fit:cover;display:block}
+    .ad-card .ad-body{flex:1;min-width:0;overflow:hidden;display:flex;flex-direction:column;gap:3px;word-break:normal;overflow-wrap:anywhere}
+    .ad-card .ad-name{font-weight:700;font-size:12px;color:#222;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:normal;overflow-wrap:anywhere;white-space:normal;writing-mode:horizontal-tb}
+    .ad-card .ad-price{font:700 15px/1.2 -apple-system,sans-serif;color:#fe2c55}
+    .ad-card .ad-price::before{content:"¥";font-size:11px;margin-right:1px}
+    .ad-card .ad-reason{font-size:10.5px;color:#888;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:normal;overflow-wrap:anywhere;white-space:normal;writing-mode:horizontal-tb}
+    .ad-card .ad-tags{display:flex;gap:4px;flex-wrap:wrap}
+    .ad-card .ad-tag{font-size:9px;padding:1px 5px;border-radius:3px;background:#fff0f0;color:#fe2c55;font-weight:600;border:1px solid #ffe0e0;line-height:1.5;white-space:nowrap}
+    .ad-card .ad-link{align-self:flex-start;display:inline-block;font-size:11px;color:#fff;background:linear-gradient(135deg,#fe2c55,#ff4d6d);padding:4px 12px;border-radius:14px;text-decoration:none;font-weight:600;margin-top:2px;white-space:nowrap;box-shadow:0 2px 6px rgba(254,44,85,.3)}
+    .ad-card .ad-link:hover{opacity:.92}
+    .answer .md-img{max-width:100%;width:auto;height:auto;border-radius:8px;margin:8px 0;display:block;object-fit:contain}.criteria { margin-top:24px; padding:17px 18px;}.criteria-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.criteria-title h3{margin:0;font-size:13px}.text-link{background:transparent;color:var(--moss);font-size:12px;font-weight:700}.criterion{display:grid;grid-template-columns:1fr auto;gap:10px;padding:13px 0;border-top:1px solid var(--line)}.criterion:first-of-type{border-top:0}.criterion-name{font-weight:700;font-size:12px}.criterion-desc{color:var(--muted);font-size:11px;margin-top:3px}.pick{display:flex;gap:5px}.pick button{width:30px;height:28px;border:1px solid var(--line);background:#fff;border-radius:6px;font:700 11px "DM Mono",monospace;color:#69756c}.pick button.selected{background:var(--moss);border-color:var(--moss);color:#fff}
+    .answer-img{max-width:100%;border-radius:8px;border:1px solid var(--line);display:block;margin:0 auto}
+    .answer-text{white-space:pre-wrap}
+    .scorebox{padding:17px}.scorebox h3{margin:0 0 6px;font-size:13px}.scorebox p{font-size:11px;color:var(--muted);line-height:1.55;margin:0 0 13px}
+    .save{width:100%;margin-top:14px}.save-note{margin-top:10px;text-align:center;color:#778278;font-size:10px}
+    .toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,120px);background:#153e2e;color:#fff;padding:12px 17px;border-radius:8px;font-size:13px;font-weight:600;box-shadow:0 9px 24px #193a2b40;transition:transform .35s ease;z-index:9999}.toast.show{transform:translate(-50%,0)}
+    .create-sheet{display:none;position:fixed;inset:0;background:#1831273d;z-index:4;align-items:center;justify-content:center;padding:20px}.create-sheet.open{display:flex}.dialog{width:min(520px,100%);background:var(--white);padding:27px;border-radius:14px;box-shadow:0 24px 70px #172a2045;max-height:90vh;overflow-y:auto}.dialog h2{margin:0 0 5px;font:600 26px "Source Serif 4",serif}.dialog p{color:var(--muted);font-size:12px;margin:0 0 20px}.field{display:grid;gap:6px;margin:12px 0}.field label{font-size:12px;font-weight:700}.field input,.field select,.field textarea{border:1px solid var(--line);border-radius:7px;padding:10px;outline:none;font-family:inherit;font-size:13px}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--moss)}.dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:21px}
+    .upload-zone{border:2px dashed var(--line);border-radius:10px;padding:28px 16px;text-align:center;cursor:pointer;transition:.2s;background:#f9faf6;margin:12px 0}.upload-zone:hover,.upload-zone.dragover{border-color:var(--moss);background:#eef7ed}.upload-zone .upload-icon{font-size:32px;margin-bottom:8px}.upload-zone p{margin:4px 0;color:var(--muted);font-size:12px}.upload-zone strong{color:var(--moss);font-size:13px}
+    .excel-preview{max-height:200px;overflow:auto;border:1px solid var(--line);border-radius:8px;margin:12px 0}.excel-preview table{width:100%;border-collapse:collapse;font-size:11px}.excel-preview th,.excel-preview td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.excel-preview th{background:#f0f3ed;font-weight:700;color:var(--ink);position:sticky;top:0}.excel-preview tr:nth-child(even){background:#fafbf8}
+    .import-tabs{display:flex;gap:8px;margin:18px 0 12px;padding:4px;background:#f0f3ed;border-radius:9px}.import-tab{flex:1;padding:9px 10px;border-radius:7px;background:transparent;color:#66736b;font-weight:700;font-size:12px}.import-tab.active{background:var(--white);color:var(--moss);box-shadow:0 1px 2px #d2d9d1}.import-pane{display:none}.import-pane.active{display:block}.paste-box{min-height:160px;resize:vertical;line-height:1.55}.feishu-help{padding:11px 12px;border:1px solid #d6e6d8;background:#f4faf1;border-radius:8px;color:#526057;font-size:12px;line-height:1.6;margin:10px 0}.advanced-box{border-top:1px solid var(--line);margin-top:14px;padding-top:13px}.advanced-toggle{background:transparent;color:var(--moss);font-weight:700;font-size:12px;padding:0}.advanced-content{display:none;margin-top:10px}.advanced-content.open{display:block}.inline-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
+    .col-mapping{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+    .mapping-item label{font-size:11px;font-weight:700;color:var(--muted)}
+    .mapping-item select{width:100%;border:1px solid var(--line);border-radius:6px;padding:8px;font-size:12px}
+    .gsb-card{border-top:1px solid var(--line);padding:15px 16px 16px;background:#fbfcf8}.gsb-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}.gsb-head h3{margin:0;font-size:13px}.gsb-chip{font:600 9px "DM Mono",monospace;letter-spacing:.08em;background:#e3f0e2;color:var(--moss);padding:4px 6px;border-radius:4px}.gsb-rule{padding:10px 0;border-top:1px solid var(--line)}.gsb-rule:first-of-type{border-top:0}.gsb-rule strong{display:block;font-size:12px}.gsb-rule p{font-size:10px;line-height:1.45;color:var(--muted);margin:3px 0 8px}.gsb-choice{display:grid;grid-template-columns:repeat(5,1fr);gap:3px}.gsb-choice button{padding:6px 1px;border:1px solid var(--line);border-radius:5px;background:#fff;color:#607067;font-size:10px;font-weight:700;line-height:1.2;white-space:nowrap}.gsb-choice button.selected{background:var(--moss);border-color:var(--moss);color:#fff}.total-score{margin-top:11px;padding:12px;background:var(--moss);color:#fff;border-radius:8px}.total-score-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}.total-score-head span{font-size:10px;color:#d8eadc}.total-score-head b{font:700 14px "Source Serif 4",serif}.total-choice{display:grid;grid-template-columns:repeat(5,1fr);gap:3px}.total-choice button{padding:6px 1px;border:1px solid rgba(255,255,255,.35);border-radius:5px;background:transparent;color:#eaf3ec;font-size:10px;font-weight:700;line-height:1.2;white-space:nowrap;cursor:pointer}.total-choice button.selected{background:#fff;color:var(--moss);border-color:#fff}.reason-panel{padding:17px;border-top:1px solid var(--line)}.reason-panel h3{font-size:13px;margin:0 0 6px}.reason-panel p{font-size:11px;color:var(--muted);line-height:1.5;margin:0 0 12px}.reason-switch{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}.reason-switch button{padding:8px 5px;border:1px solid var(--line);border-radius:6px;background:#fff;font-size:11px;font-weight:700;color:#6a776e}.reason-switch button.selected.positive{border-color:#8bbb68;background:#eff8e9;color:#266b42}.reason-switch button.selected.negative{border-color:#e5ab8c;background:#fff0e8;color:#a34d2b}.reason-panel select,.reason-panel textarea{width:100%;border:1px solid var(--line);border-radius:7px;background:#fff;padding:9px;font:12px "Noto Sans SC",sans-serif;outline:0}.reason-panel textarea{height:70px;resize:vertical;margin-top:8px}.reason-warning{display:none;margin:8px 0 0;padding:8px 9px;border-radius:6px;background:#fff2eb;color:#a35333;font-size:11px;line-height:1.45}.reason-warning.show{display:block}.timer{margin:11px 0;padding:10px 11px;border-radius:7px;background:#edf5ed;color:#315d45;display:flex;justify-content:space-between;align-items:center}.timer span{font-size:11px;font-weight:700}.timer b{font:600 17px "DM Mono",monospace}.reason-panel select:focus,.reason-panel textarea:focus{border-color:var(--moss)}.reason-list{border-top:1px solid var(--line);padding:14px 17px 16px}.reason-list h3{font-size:12px;margin:0 0 9px}.reason-item{font-size:11px;line-height:1.5;padding:8px 9px;margin-top:7px;border-radius:6px;background:#f4f6f1}.reason-item small{display:block;margin-bottom:2px;font:600 9px "DM Mono",monospace;color:#5f7d68}.reason-item.negative{background:#fff3ed}.reason-item.negative small{color:#a45a3b}.mark-positive{background:#dff3bb;border-bottom:2px solid #82b638;cursor:pointer}.mark-negative{background:#ffdace;border-bottom:2px solid #dc8057;cursor:pointer}.annotation-menu{display:none;position:fixed;z-index:6;background:#20362c;color:#fff;border-radius:7px;padding:5px;box-shadow:0 10px 25px #1d312740;gap:4px;align-items:center}.annotation-menu.show{display:flex}.annotation-menu span{font-size:10px;padding:0 5px;color:#d9e5dc}.annotation-menu button{font-size:10px;padding:6px 7px;border-radius:4px;background:#375548;color:#fff}.annotation-menu button:last-child{background:#80513d}.answer .hint{display:block;margin:14px 0 0;padding:7px 8px;border:1px dashed #c7d3ca;border-radius:5px;font-size:10px;color:#758178;background:#fbfcf9}
+    .result-link{width:100%;margin-top:10px;background:transparent;color:var(--moss);font-size:12px;font-weight:700;padding:8px 0}.result-wrap{max-width:900px}.result-summary{display:grid;grid-template-columns:1.25fr .75fr;gap:18px}.result-card{padding:23px}.result-card h2{margin:0 0 8px;font-size:18px}.result-card p{color:var(--muted);font-size:12px;line-height:1.6}.result-score{font:600 46px/1 "Source Serif 4",serif;color:var(--moss);margin:20px 0 6px}.result-dim{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:14px 0;border-top:1px solid var(--line)}.result-dim b{font-size:12px}.result-dim span{font:600 12px "DM Mono",monospace;color:var(--moss)}.result-reasons{margin-top:18px}.auth-tabs{display:flex;gap:18px;border-bottom:1px solid var(--line);margin:18px 0}.auth-tab{padding:0 0 9px;background:transparent;color:var(--muted);font-weight:700}.auth-tab.active{color:var(--ink);border-bottom:2px solid var(--moss)}.role-options{display:flex;gap:6px;flex-wrap:wrap}.role-option{border:1px solid var(--line);background:#fff;border-radius:6px;padding:7px 9px;font-size:11px}.role-option.selected{border-color:var(--moss);background:#eef7ed;color:var(--moss);font-weight:700}
+    .empty-state{text-align:center;padding:60px 20px;color:var(--muted)}.empty-state .empty-icon{font-size:48px;margin-bottom:12px;opacity:.5}.empty-state h3{color:var(--ink);font-size:18px;margin:0 0 8px}.empty-state p{font-size:13px;margin:0 0 20px}
+    @media(max-width:1100px){.eval{grid-template-columns:210px minmax(500px,1fr)}.right-panel{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr}.scorebox{border-left:1px solid var(--line)}.task-row{grid-template-columns:minmax(220px,2fr) 1fr 1fr 1fr 34px}.task-row .hide-sm{display:none}} @media(max-width:780px){.app{grid-template-columns:1fr}.side{height:auto;position:static;padding:14px 16px;flex-direction:row;align-items:center;gap:16px}.brand{padding:0;margin-right:auto}.side .eyebrow,.side-foot{display:none}nav{display:flex}.nav-item{padding:8px}.nav-item span{display:none}.topbar{height:58px}.page{padding:27px 18px}.page-head{display:block}.page-head .button{margin-top:15px}.task-row{grid-template-columns:1fr auto;padding:16px 3px}.task-row>*:not(:first-child):not(:last-child){display:none}.eval{display:block}.left-panel{margin-bottom:18px}.questions{display:flex;overflow:auto}.question{min-width:200px;border-bottom:0;border-right:1px solid var(--line)}.profile{display:none}.phones{gap:10px}.phone{border-width:5px;height:430px;border-radius:22px}.answer{height:380px;padding:15px 13px;font-size:11px}.mobile-head{height:48px;padding:19px 13px 6px}.criteria{margin-top:16px}.right-panel{display:block;margin-top:16px}.scorebox{border-top:1px solid var(--line)}.top-actions .icon-btn{display:none}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="side"><div class="brand"><span class="mark"></span><span>GSB Eval</span></div><div><div class="eyebrow">工作台</div><nav><button class="nav-item active" data-page="tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16M4 12h16M4 19h10"/></svg><span>任务管理</span></button><button class="nav-item" data-page="evaluation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4h14v16H5z"/><path d="m8 9 2 2 5-5M8 16h8"/></svg><span>任务评估</span></button></nav></div><div class="side-foot"><span class="avatar">GS</span><span>评估工作台</span></div></aside>
+    <main>
+      <header class="topbar">
+        <div class="crumb"><strong id="crumb">任务管理</strong><span id="crumbMore"></span></div>
+        <div class="top-actions">
+          <button class="icon-btn" aria-label="通知">⌁</button>
+          <button class="icon-btn" aria-label="帮助">?</button>
+          <button class="avatar" id="accountBtn" aria-label="登录">GS</button>
+        </div>
+      </header>
+
+      <section id="tasksPage" class="page">
+        <div class="page-head">
+          <div><h1>评估任务</h1><p class="sub">围绕真实用户场景，校准回答质量。</p></div>
+          <div style="display:flex;gap:10px">
+            <button class="button light" id="importExcel">📥 导入表格</button>
+            <button class="button" id="openCreate">＋ 新建评估任务</button>
+          </div>
+        </div>
+        <div class="tabs">
+          <button class="tab active" data-tab="all">全部任务 <span class="small" id="countAll">0</span></button>
+          <button class="tab" data-tab="pending">待评估 <span class="small" id="countPending">0</span></button>
+          <button class="tab" data-tab="progress">进行中 <span class="small" id="countProgress">0</span></button>
+          <button class="tab" data-tab="done">已完成 <span class="small" id="countDone">0</span></button>
+        </div>
+        <div class="filters">
+          <button class="filter selected">全部场景</button>
+          <span style="flex:1"></span>
+          <button class="filter" id="clearAll" style="color:#c0392b">🗑 清空所有数据</button>
+        </div>
+        <div class="task-table" id="taskTable"></div>
+      </section>
+
+      <section id="evalPage" class="page" hidden>
+        <div class="page-head">
+          <div><p class="small" style="margin:0 0 9px" id="evalTaskId"></p><h1>逐题评估</h1><p class="sub">基于预设标准比较 A、B 回答，不显示模型来源。</p></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="button light" id="exportEvalData">📤 导出评估数据</button>
+            <button class="button light" id="backTasks">← 返回任务</button>
+          </div>
+        </div>
+        <div class="eval">
+          <aside class="panel left-panel">
+            <div class="panel-label">题目列表 · <span id="questionCount">0 / 0</span></div>
+            <div class="questions" id="questionsList"></div>
+            <div class="profile" id="profileSection" style="display:none">
+              <h3>用户画像</h3>
+              <div id="profileTags"></div>
+              <p class="profile-note" id="profileNote"></p>
+            </div>
+          </aside>
+
+          <div class="compare">
+            <div class="compare-top"><h2>请比较两份回答</h2><span class="counter" id="evalCounter">00 / 00</span></div>
+            <div class="phones">
+              <div class="phone-wrap">
+                <div class="answer-label">回答 A <span>候选答案</span></div>
+                <article class="phone">
+                  <div class="phone-notch"></div>
+                  <div class="phone-status">
+                    <span class="status-time">9:41</span>
+                    <span class="status-icons">
+                      <svg viewBox="0 0 17 12"><path d="M1.5 5h1.5v5H1.5zM4.5 3.5h1.5v6.5H4.5zM7.5 2h1.5v8H7.5zM10.5.5h1.5v9.5H10.5z"/></svg>
+                      <svg viewBox="0 0 17 12"><path d="M1 4.5A7 7 0 018.5 1M3 6.5A4.5 4.5 0 018.5 3.5" fill="none" stroke="#000" stroke-width="1.5" stroke-linecap="round"/><circle cx="8.5" cy="9" r="1.5"/></svg>
+                      <svg viewBox="0 0 25 12"><rect x="1" y="1" width="20" height="10" rx="2" fill="none" stroke="#000" stroke-width="1.2"/><rect x="22" y="3.5" width="1.5" height="5" rx=".7" fill="#000"/><rect x="2.5" y="2.5" width="14" height="7" rx="1" fill="#000"/></svg>
+                    </span>
+                  </div>
+                  <div class="answer" id="answerA"></div>
+                </article>
+              </div>
+              <div class="phone-wrap">
+                <div class="answer-label">回答 B <span>候选答案</span></div>
+                <article class="phone">
+                  <div class="phone-notch"></div>
+                  <div class="phone-status">
+                    <span class="status-time">9:41</span>
+                    <span class="status-icons">
+                      <svg viewBox="0 0 17 12"><path d="M1.5 5h1.5v5H1.5zM4.5 3.5h1.5v6.5H4.5zM7.5 2h1.5v8H7.5zM10.5.5h1.5v9.5H10.5z"/></svg>
+                      <svg viewBox="0 0 17 12"><path d="M1 4.5A7 7 0 018.5 1M3 6.5A4.5 4.5 0 018.5 3.5" fill="none" stroke="#000" stroke-width="1.5" stroke-linecap="round"/><circle cx="8.5" cy="9" r="1.5"/></svg>
+                      <svg viewBox="0 0 25 12"><rect x="1" y="1" width="20" height="10" rx="2" fill="none" stroke="#000" stroke-width="1.2"/><rect x="22" y="3.5" width="1.5" height="5" rx=".7" fill="#000"/><rect x="2.5" y="2.5" width="14" height="7" rx="1" fill="#000"/></svg>
+                    </span>
+                  </div>
+                  <div class="answer" id="answerB"></div>
+                </article>
+              </div>
+            </div>
+          </div>
+
+          <aside class="panel right-panel">
+            <div class="gsb-card">
+              <div class="gsb-head"><h3>维度评分</h3><span class="gsb-chip">2 个维度 · 5 档</span></div>
+              <div class="gsb-rule">
+                <strong>文风表达</strong>
+                <p>用词、语气、节奏是否清晰得体</p>
+                <div class="gsb-choice" data-rule="W">
+                  <button data-value="A更优">A更优</button><button data-value="A略优">A略优</button><button data-value="持平">持平</button><button data-value="B略优">B略优</button><button data-value="B更优">B更优</button>
+                </div>
+              </div>
+              <div class="gsb-rule">
+                <strong>组织逻辑</strong>
+                <p>结构、层次、推理是否严谨顺畅</p>
+                <div class="gsb-choice" data-rule="O">
+                  <button data-value="A更优">A更优</button><button data-value="A略优">A略优</button><button data-value="持平">持平</button><button data-value="B略优">B略优</button><button data-value="B更优">B更优</button>
+                </div>
+              </div>
+              <div class="total-score">
+                <div class="total-score-head"><span>整体总分（独立手动选择）</span><b id="totalScoreLabel">尚未选择</b></div>
+                <div class="total-choice" id="totalChoice">
+                  <button data-value="A更优">A更优</button><button data-value="A略优">A略优</button><button data-value="持平">持平</button><button data-value="B略优">B略优</button><button data-value="B更优">B更优</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="reason-panel">
+              <h3>添加评价理由</h3>
+              <p>选择正向或负向评价，并关联到具体评分维度。</p>
+              <div class="reason-switch">
+                <button class="positive selected" data-polarity="positive">＋ 正向评价</button>
+                <button class="negative" data-polarity="negative">− 负向评价</button>
+              </div>
+              <select id="reasonDimension">
+                <option value="W">文风表达</option>
+                <option value="O">组织逻辑</option>
+                <option value="overall">整体总分</option>
+              </select>
+              <textarea id="reasonText" placeholder="补充你的判断依据…"></textarea>
+              <div id="reasonWarning" class="reason-warning">请补充可核验的具体依据，例如对应的行程、用户偏好或表达问题。</div>
+              <button class="button save" id="addReason">添加理由</button>
+            </div>
+
+            <div class="reason-list">
+              <h3>本题评价 · <span id="reasonCount">0</span></h3>
+              <div id="reasonList"></div>
+            </div>
+
+            <div class="scorebox">
+              <h3>评估进度</h3>
+              <div class="timer"><span>本题评测耗时</span><b id="evaluationTimer">00:00</b></div>
+              <p style="font:500 24px 'Source Serif 4',serif;color:var(--ink);margin:0"><span id="completedCount">0</span> <span style="font:12px 'Noto Sans SC';color:var(--muted)">/ <span id="totalCount">0</span> 已完成</span></p>
+              <button class="button save" id="saveEval">提交本题评估</button>
+              <button class="result-link" id="showResults">查看评估结果 →</button>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section id="resultsPage" class="page result-wrap" hidden>
+        <div class="page-head">
+          <div><p class="small" style="margin:0 0 9px" id="resultTaskId"></p><h1>评估结果</h1><p class="sub" id="resultSub">汇总各题的维度判断与评价依据。</p></div>
+          <button class="button light" id="backEvaluation">← 返回评估</button>
+        </div>
+        <div class="result-summary">
+          <section class="panel result-card">
+            <h2>本轮胜出回答</h2>
+            <div class="result-score" id="overallWinner">–</div>
+            <p id="resultSummaryText">请完成更多题目评估以生成汇总。</p>
+            <div id="dimensionBreakdown"></div>
+          </section>
+          <section class="panel result-card">
+            <h2>任务概览</h2>
+            <p id="resultStatus">状态：–</p>
+            <p id="resultEvaluator">评估人：–</p>
+            <p id="resultProgress">完成题目：–</p>
+            <p id="resultReasonCount">有效评价理由：–</p>
+            <div style="display:flex;gap:10px;margin-top:16px">
+              <button class="button" id="exportResults">导出结果报告</button>
+              <button class="button light" id="exportRaw">导出原始数据</button>
+            </div>
+          </section>
+        </div>
+        <section class="panel result-card result-reasons">
+          <h2>重点评价依据</h2>
+          <div id="resultReasons"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div class="create-sheet" id="createSheet">
+    <div class="dialog">
+      <h2>新建评估任务</h2>
+      <p>创建后可由产品、CQC 和管理者共同查看与评估。</p>
+      <div class="field"><label>任务名称</label><input id="newTaskName" placeholder="例如：旅行规划助手 · 长链路任务"></div>
+      <div class="field"><label>评估标准</label><input id="newTaskDesc" value="文风表达、组织逻辑"></div>
+      <div class="dialog-actions">
+        <button class="button light" id="closeCreate">取消</button>
+        <button class="button" id="createTask">创建任务</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="create-sheet" id="importSheet">
+    <div class="dialog">
+      <h2>导入评估数据</h2>
+      <p>支持 Excel 文件导入或飞书表格内容粘贴。</p>
+      
+      <div class="import-tabs">
+        <button type="button" class="import-tab active" data-import-type="excel">Excel 文件</button>
+        <button type="button" class="import-tab" data-import-type="feishu">飞书表格/多维表格</button>
+      </div>
+
+      <div class="import-pane active" id="excelPane">
+        <div class="upload-zone" id="uploadZone">
+          <div class="upload-icon">📊</div>
+          <strong>点击选择文件</strong>
+          <p>或将文件拖拽到此处</p>
+          <p style="font-size:11px;color:#999">支持 .xlsx, .xls 格式</p>
+          <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none">
+        </div>
+      </div>
+
+      <div class="import-pane" id="feishuPane">
+        <div class="field">
+          <label>从飞书表格复制并粘贴</label>
+          <textarea id="pasteInput" class="paste-box" placeholder="点击飞书表格左上角全选，复制(Ctrl+C)后在此处粘贴(Ctrl+V)"></textarea>
+          <div class="feishu-help">
+            💡 <strong>提示：</strong> 飞书表格复制后默认为 TSV (Tab 分隔) 格式，粘贴后我们将自动解析列。
+          </div>
+        </div>
+        
+        <div class="advanced-box">
+          <button type="button" class="advanced-toggle" id="toggleAdvanced">＋ 高级选项：飞书链接解析</button>
+          <div class="advanced-content" id="advancedContent">
+            <div class="field">
+              <label>飞书表格分享链接</label>
+              <input id="feishuUrl" placeholder="https://bytedance.larkoffice.com/sheets/...">
+            </div>
+            <p style="font-size:11px;color:var(--muted)">注意：此功能需要配置飞书 API Token 权限，建议首选粘贴方式。</p>
+          </div>
+        </div>
+
+        <div class="inline-actions">
+          <button type="button" class="button" id="parsePaste">预览并映射列</button>
+        </div>
+      </div>
+
+      <div id="importConfig" style="display:none">
+        <div class="field"><label>任务名称</label><input id="importTaskName" placeholder="为这批数据命名任务"></div>
+        <div class="excel-preview" id="excelPreview"></div>
+        <div class="col-mapping" id="colMapping"></div>
+        <div class="dialog-actions">
+          <button type="button" class="button light" id="cancelImport">取消</button>
+          <button type="button" class="button" id="confirmImport">确认导入</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="create-sheet" id="authSheet">
+    <div class="dialog">
+      <h2>欢迎使用 GSB Eval</h2>
+      <p>登录后可按产品、CQC 或管理者角色参与任务。</p>
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-auth="login">登录</button>
+        <button class="auth-tab" data-auth="register">注册账号</button>
+      </div>
+      <div class="field"><label>邮箱或账号</label><input id="accountInput" placeholder="请输入邮箱或账号"></div>
+      <div class="field"><label>密码</label><input type="password" placeholder="请输入密码"></div>
+      <div class="field" id="roleField" hidden><label>选择角色</label>
+        <div class="role-options">
+          <button class="role-option selected">产品</button>
+          <button class="role-option">CQC</button>
+          <button class="role-option">管理者</button>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button class="button light" id="closeAuth">取消</button>
+        <button class="button" id="submitAuth">登录</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">操作成功</div>
+
+  <script>
+  (function(){
+    const STORAGE_KEY = 'gsb_tasks';
+    let currentTaskId = null;
+    let currentQuestionIndex = 0;
+    let evaluationTimerInterval = null;
+    let questionStartedAt = 0;
+    let currentPolarity = 'positive';
+    let currentTab = 'all';
+    let excelData = null;
+    let importSourceType = 'excel';
+    let xlsxLoader = null;
+
+    function getTasks(){
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+      catch(e){ return []; }
+    }
+    function saveTasks(tasks){ localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); }
+    function getTask(id){ return getTasks().find(t => t.id === id); }
+    function saveTask(task){
+      const tasks = getTasks();
+      const idx = tasks.findIndex(t => t.id === task.id);
+      if(idx >= 0) tasks[idx] = task; else tasks.push(task);
+      saveTasks(tasks);
+    }
+    function deleteTask(id){ saveTasks(getTasks().filter(t => t.id !== id)); }
+
+    // 题目完成 = 2 个维度评分（文风表达 / 组织逻辑）+ 独立总分均已选择
+    function isQuestionDone(q){
+      if(!q || !q.evaluation) return false;
+      const scores = q.evaluation.scores || {};
+      const ok = ['W','O'].every(k => scores[k] && String(scores[k]).trim());
+      return ok && !!(q.evaluation.overall && String(q.evaluation.overall).trim());
+    }
+
+    function calcTaskStatus(task){
+      if(!task.questions || task.questions.length === 0) return 'pending';
+      const done = task.questions.filter(isQuestionDone).length;
+      if(done === 0) return 'pending';
+      if(done === task.questions.length) return 'done';
+      return 'progress';
+    }
+
+    function showToast(msg){
+      const t = document.querySelector('#toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(()=>t.classList.remove('show'), 2600);
+    }
+
+    function renderTasks(){
+      const tasks = getTasks();
+      const filtered = tasks.filter(t => currentTab === 'all' || calcTaskStatus(t) === currentTab);
+      const table = document.querySelector('#taskTable');
+
+      document.querySelector('#countAll').textContent = tasks.length;
+      document.querySelector('#countPending').textContent = tasks.filter(t => calcTaskStatus(t) === 'pending').length;
+      document.querySelector('#countProgress').textContent = tasks.filter(t => calcTaskStatus(t) === 'progress').length;
+      document.querySelector('#countDone').textContent = tasks.filter(t => calcTaskStatus(t) === 'done').length;
+
+      if(filtered.length === 0){
+        table.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><h3>${currentTab === 'all' ? '暂无评估任务' : '当前分类下无任务'}</h3><p>${currentTab === 'all' ? '点击右上角「导入表格」或「新建评估任务」开始' : ''}</p></div>`;
+        return;
+      }
+
+      table.innerHTML = filtered.map(t => {
+        const status = calcTaskStatus(t);
+        const statusHtml = {
+          pending: '<span class="status"><i class="dot amber"></i>待评估</span>',
+          progress: '<span class="status"><i class="dot green"></i>进行中</span>',
+          done: '<span class="status"><i class="dot"></i>已完成</span>'
+        }[status];
+        const total = t.questions ? t.questions.length : 0;
+        const doneCount = t.questions ? t.questions.filter(isQuestionDone).length : 0;
+        const date = t.createdAt ? new Date(t.createdAt) : new Date();
+        const dateStr = `${String(date.getMonth()+1).padStart(2,'0')}/${String(date.getDate()).padStart(2,'0')} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+        return `
+          <div class="task-row">
+            <div>
+              <div class="task-title">${t.name}</div>
+              <span class="task-id">${t.id} · ${total} 个题目 · 已评 ${doneCount}</span>
+            </div>
+            <span class="role">${t.description || '–'}</span>
+            ${statusHtml}
+            <span class="small">${dateStr}</span>
+            <span class="role hide-sm">评估人</span>
+            <div style="display:flex;gap:6px">
+              <button class="open" data-open-eval="${t.id}" title="开始评估">→</button>
+              <button class="task-delete" data-delete="${t.id}" title="删除任务">✕</button>
+            </div>
+          </div>`;
+      }).join('');
+
+      table.querySelectorAll('[data-open-eval]').forEach(b => b.addEventListener('click', () => openEval(b.dataset.openEval)));
+      table.querySelectorAll('[data-delete]').forEach(b => b.addEventListener('click', () => {
+        if(confirm('确定删除此任务？此操作不可恢复。')){
+          deleteTask(b.dataset.delete);
+          renderTasks();
+          showToast('任务已删除');
+        }
+      }));
+    }
+
+    function openTask(id){
+      currentTaskId = id;
+      currentQuestionIndex = 0;
+      showEval();
+    }
+
+    function openEval(taskId){
+      currentTaskId = taskId;
+      currentQuestionIndex = 0;
+      showEval();
+    }
+
+    function showEval(){
+      const task = getTask(currentTaskId);
+      if(!task){ showToast('任务不存在'); showTasks(); return; }
+
+      tasksPage.hidden = true;
+      resultsPage.hidden = true;
+      evalPage.hidden = false;
+      document.querySelectorAll('.nav-item').forEach(x => x.classList.toggle('active', x.dataset.page === 'evaluation'));
+
+      crumb.textContent = '任务管理';
+      crumbMore.textContent = `  /  ${task.id}  /  逐题评估`;
+      document.querySelector('#evalTaskId').textContent = `${task.id} · ${task.name}`;
+
+      renderQuestionsList();
+      renderQuestion();
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
+
+    function renderQuestionsList(){
+      const task = getTask(currentTaskId);
+      if(!task) return;
+      const list = document.querySelector('#questionsList');
+      list.innerHTML = (task.questions || []).map((q, i) => {
+        const isDone = isQuestionDone(q);
+        return `<div class="question ${i === currentQuestionIndex ? 'active' : ''}" data-idx="${i}">
+          <span class="q-num">${String(i+1).padStart(2,'0')}</span>
+          <div>
+            <span class="q-copy">${q.query}</span>
+            <div class="q-status ${isDone ? 'done' : 'todo'}">${isDone ? '✓ 已评估' : '○ 待评估'}</div>
+          </div>
+        </div>`;
+      }).join('');
+      list.querySelectorAll('.question').forEach(el => el.addEventListener('click', () => {
+        currentQuestionIndex = parseInt(el.dataset.idx);
+        renderQuestionsList();
+        renderQuestion();
+      }));
+    }
+
+    function isImageContent(str){
+      if(!str) return false;
+      const s = String(str).trim();
+      return /^https?:\/\/.+\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?$/i.test(s) ||
+             s.startsWith('data:image/') ||
+             s.startsWith('blob:');
+    }
+
+    function parseRichMarkdown(text){
+      if(!text) return '';
+      let html = String(text);
+
+      // ------- PRE-PASS: extract product cards from table-like rows BEFORE any other parsing -------
+      const productCards = [];
+      const pushCard = (imgUrl, adAttrs, linkText, linkUrl) => {
+        const getAttr = (name) => {
+          const q = adAttrs.match(new RegExp(name + '\\s*=\\s*"([^"]*)"'));
+          if(q) return q[1];
+          const u = adAttrs.match(new RegExp(name + "\\s*=\\s*'([^']*)'"));
+          if(u) return u[1];
+          const b = adAttrs.match(new RegExp(name + '\\s*=\\s*([^\\s>|]+)'));
+          return b ? b[1] : '';
+        };
+        const product = getAttr('product');
+        const price = getAttr('price');
+        const reason = getAttr('reason');
+        const isAweme = getAttr('is_aweme_flagship') === 'true';
+        const imgHtml = imgUrl ? `<img class="ad-thumb" src="${imgUrl}" onerror="this.style.display='none';this.parentNode.innerHTML='🛍️'">` : '🛍️';
+        const tagsHtml = isAweme ? '<span class="ad-tag">抖音旗舰店</span>' : '';
+        const reasonHtml = reason ? `<div class="ad-reason">${reason}</div>` : '';
+        const linkHtml = `<a class="ad-link" href="${linkUrl || '#'}" target="_blank">${linkText || '查看详情'}</a>`;
+        const idx = productCards.length;
+        productCards.push(`<div class="ad-card"><div class="ad-img">${imgHtml}</div><div class="ad-body"><div class="ad-name">${product}</div><div class="ad-price">${price}</div>${tagsHtml ? `<div class="ad-tags">${tagsHtml}</div>` : ''}${reasonHtml}${linkHtml}</div></div>`);
+        return `\n___PRODUCT_CARD_${idx}___\n`;
+      };
+
+      // Pattern 1: markdown table row containing both <img src=[...]> and <ad ...>
+      // e.g. `| <img src=[url] ... /> | <ad product="..." ... [详情](url)> |`
+      html = html.replace(/\|\s*<img\s+src=\[([^\]]+)\][^>]*\/?>\s*\|\s*<ad\s+([^>]*?)(?:\[([^\]]*)\]\(([^)]*)\))\s*>\s*\|/gi,
+        (m, imgUrl, adAttrs, linkText, linkUrl) => pushCard(imgUrl, adAttrs, linkText, linkUrl));
+
+      // Pattern 2: markdown table row with reversed order
+      html = html.replace(/\|\s*<ad\s+([^>]*?)(?:\[([^\]]*)\]\(([^)]*)\))\s*>\s*\|\s*<img\s+src=\[([^\]]+)\][^>]*\/?>\s*\|/gi,
+        (m, adAttrs, linkText, linkUrl, imgUrl) => pushCard(imgUrl, adAttrs, linkText, linkUrl));
+
+      // Pattern 3: <img> and <ad> adjacent (not in a table row), still merge as product card
+      html = html.replace(/<img\s+src=\[([^\]]+)\][^>]*\/?>\s*<ad\s+([^>]*?)(?:\[([^\]]*)\]\(([^)]*)\))\s*>/gi,
+        (m, imgUrl, adAttrs, linkText, linkUrl) => pushCard(imgUrl, adAttrs, linkText, linkUrl));
+
+      // Filter out markdown table alignment-only rows like `|:-:|:-:|` / `|---|---|` / `| :---: |`
+      html = html.replace(/^\s*\|(?:\s*:?-+:?\s*\|)+\s*$/gm, '');
+
+      // ------- Standalone <ad ...> tags (no accompanying image) → product card without image -------
+      html = html.replace(/<ad\s+([^>]*?)(?:\[([^\]]*)\]\(([^)]*)\))\s*>/gi,
+        (m, adAttrs, linkText, linkUrl) => pushCard('', adAttrs, linkText, linkUrl));
+      // Fallback: <ad ...> without [text](url) inside — still render a card, drop leaked url
+      html = html.replace(/<ad\s+([^>]*?)>/gi, (m, adAttrs) => {
+        // If there's a bare URL in attrs like `... http://example.com`, capture it
+        const urlMatch = adAttrs.match(/(https?:\/\/[^\s"'<>]+)/);
+        const cleanedAttrs = adAttrs.replace(/https?:\/\/[^\s"'<>]+/g, '').replace(/\[[^\]]*\]\([^)]*\)/g, '');
+        return pushCard('', cleanedAttrs, '查看详情', urlMatch ? urlMatch[1] : '');
+      });
+      // Strip any leftover leaked pipe/url residues like `> |` or `| ... > |`
+      html = html.replace(/(\s|^)>\s*\|/g, ' ');
+      // Absorb pipes around product-card placeholders
+      html = html.replace(/\|\s*(___PRODUCT_CARD_\d+___)\s*\|/g, '$1');
+      html = html.replace(/\|\s*(___PRODUCT_CARD_\d+___)/g, '$1');
+      html = html.replace(/(___PRODUCT_CARD_\d+___)\s*\|/g, '$1');
+      // Remove standalone pipe-only lines
+      html = html.replace(/^\s*\|+\s*$/gm, '');
+
+      // ------- Standalone <img src=[url] ...> → images -------
+      html = html.replace(/<img\s+src=\[([^\]]+)\]([^/]*)\/?>/gi, (match, url, rest) => {
+        const wm = rest.match(/width="(\d+)"/i);
+        const hm = rest.match(/height="(\d+)"/i);
+        const w = wm ? wm[1] : '';
+        const h = hm ? hm[1] : '';
+        const style = (w || h) ? ` style="max-width:${w ? Math.min(parseInt(w), 260) + 'px' : '100%'};${h ? 'max-height:' + h + 'px;' : ''}"` : '';
+        return `<img class="md-img" src="${url}"${style} loading="lazy" onerror="this.style.display='none'">`;
+      });
+      html = html.replace(/<img\s+src="([^"]+)"([^/]*)\/?>/gi, (match, url, rest) => {
+        const wm = rest.match(/width="(\d+)"/i);
+        const hm = rest.match(/height="(\d+)"/i);
+        const w = wm ? wm[1] : '';
+        const h = hm ? hm[1] : '';
+        const style = (w || h) ? ` style="max-width:${w ? Math.min(parseInt(w), 260) + 'px' : '100%'};${h ? 'max-height:' + h + 'px;' : ''}"` : '';
+        return `<img class="md-img" src="${url}"${style} loading="lazy" onerror="this.style.display='none'">`;
+      });
+
+      // ------- <RichMediaReference> → superscript -------
+      html = html.replace(/<RichMediaReference>(.*?)<\/RichMediaReference>/gi, (match, inner) => {
+        const nums = [];
+        inner.replace(/<\|superscript\|>:(\d+)/gi, (m, n) => { nums.push(n); });
+        if(nums.length === 0) return '';
+        return `<span class="md-sup">${nums.map(n => `<span class="md-sup-item">${n}</span>`).join('')}</span>`;
+      });
+
+      // ------- <mark> → highlight -------
+      html = html.replace(/<mark>(.*?)<\/mark>/gi, (m, t) => `<span class="md-mark">${t}</span>`);
+
+      // ------- Code blocks -------
+      html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (m, lang, code) => {
+        return `<pre><code>${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>`;
+      });
+
+      // ------- Standard markdown tables (only rows that were NOT converted above) -------
+      html = html.replace(/((?:^\|[^\n]+\|\n?){2,})/gm, (tableBlock) => {
+        const lines = tableBlock.trim().split('\n').filter(l => l.trim());
+        if(lines.length < 2) return tableBlock;
+        // Skip if any line still contains raw ad/img markup that shouldn't be in a plain table
+        if(lines.some(l => /___PRODUCT_CARD_\d+___/.test(l))) return tableBlock;
+        const parseRow = (line) => line.split('|').slice(1, -1).map(c => c.trim());
+        const headers = parseRow(lines[0]);
+        const bodyStart = (lines[1] && /^[\s:|-]+$/.test(lines[1])) ? 2 : 1;
+        let tbl = '<table><thead><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead><tbody>';
+        for(let i = bodyStart; i < lines.length; i++){
+          const cells = parseRow(lines[i]);
+          tbl += '<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>';
+        }
+        tbl += '</tbody></table>';
+        return tbl;
+      });
+
+      // Headers
+      html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+      html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+      html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+      html = html.replace(/^---+$/gm, '<hr>');
+      html = html.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
+
+      html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+      html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+      html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+      // Markdown links (but skip already-processed product-card placeholders)
+      html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color:#1a73e8;text-decoration:underline;word-break:break-all">$1</a>');
+
+      // Lists
+      html = html.replace(/((?:^[-*] .+\n?)+)/gm, (block) => {
+        const items = block.trim().split('\n').map(line => `<li>${line.replace(/^[-*] /, '')}</li>`).join('');
+        return `<ul>${items}</ul>`;
+      });
+      html = html.replace(/((?:^\d+\. .+\n?)+)/gm, (block) => {
+        const items = block.trim().split('\n').map(line => `<li>${line.replace(/^\d+\. /, '')}</li>`).join('');
+        return `<ol>${items}</ol>`;
+      });
+
+      // Paragraphs
+      html = html.replace(/\n{2,}/g, '</p><p>');
+      html = html.replace(/\n/g, '<br>');
+      if(!html.startsWith('<')) html = '<p>' + html;
+      if(!html.endsWith('>')) html += '</p>';
+
+      // Cleanup wrappers around block elements
+      html = html.replace(/<p><\/p>/g, '');
+      html = html.replace(/<p>(<h[123]|<ul|<ol|<table|<pre|<blockquote|<hr|<div|___PRODUCT_CARD_)/g, '$1');
+      html = html.replace(/(<\/h[123]>|<\/ul>|<\/ol>|<\/table>|<\/pre>|<\/blockquote>|<hr>|<\/div>|___)<\/p>/g, '$1');
+
+      // Restore product card placeholders (wrapped in <br> or <p> stripped above)
+      html = html.replace(/___PRODUCT_CARD_(\d+)___/g, (m, idx) => productCards[parseInt(idx)] || '');
+
+      // Final safety: strip any leftover markdown alignment fragments like `:-:` `:---:` on their own
+      html = html.replace(/(^|<br>|<p>)\s*:?-{2,}:?\s*(?=<br>|<\/p>|$)/g, '$1');
+
+      return html;
+    }
+
+    function renderAnswerContent(container, content, label){
+      if(!content){
+        container.innerHTML = `<p style="color:var(--muted);text-align:center;padding:40px 20px">暂无${label}</p>`;
+        return;
+      }
+      if(isImageContent(content)){
+        container.innerHTML = `<img src="${content}" class="md-img" alt="${label}" style="max-width:100%" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<p style=\\'color:#c0392b;text-align:center\\'>图片加载失败</p>')">`;
+      } else {
+        container.innerHTML = parseRichMarkdown(content);
+      }
+    }
+
+    function renderQuestion(){
+      const task = getTask(currentTaskId);
+      if(!task || !task.questions || task.questions.length === 0) return;
+      const q = task.questions[currentQuestionIndex];
+      if(!q) return;
+
+      const total = task.questions.length;
+      document.querySelector('#questionCount').textContent = `${String(currentQuestionIndex+1).padStart(2,'0')} / ${String(total).padStart(2,'0')}`;
+      document.querySelector('#evalCounter').textContent = `${String(currentQuestionIndex+1).padStart(2,'0')} / ${String(total).padStart(2,'0')}`;
+
+      // Phone headers removed - using iPhone status bar instead
+
+      renderAnswerContent(document.querySelector('#answerA'), q.answerA, '回答A');
+      renderAnswerContent(document.querySelector('#answerB'), q.answerB, '回答B');
+
+      if(q.userProfile){
+        document.querySelector('#profileSection').style.display = '';
+        document.querySelector('#profileTags').innerHTML = (q.userProfile.tags || []).map(t => `<span class="tag">${t}</span>`).join('');
+        document.querySelector('#profileNote').textContent = q.userProfile.note || '';
+      } else {
+        document.querySelector('#profileSection').style.display = 'none';
+      }
+
+      initGsbChoices(q);
+      renderReasons(q);
+      updateProgressDisplay();
+
+      questionStartedAt = Date.now();
+      if(evaluationTimerInterval) clearInterval(evaluationTimerInterval);
+      evaluationTimerInterval = setInterval(renderTimer, 1000);
+      renderTimer();
+
+      document.querySelector('#reasonText').value = '';
+      document.querySelector('#reasonWarning').classList.remove('show');
+
+      window.getSelection().removeAllRanges();
+      document.querySelectorAll('.annotation-menu').forEach(m => m.remove());
+    }
+
+    function renderTimer(){
+      const elapsed = Math.floor((Date.now() - questionStartedAt) / 1000);
+      document.querySelector('#evaluationTimer').textContent =
+        String(Math.floor(elapsed/60)).padStart(2,'0') + ':' + String(elapsed%60).padStart(2,'0');
+    }
+
+    function initGsbChoices(q){
+      const scores = (q.evaluation && q.evaluation.scores) || {};
+      document.querySelectorAll('.gsb-choice').forEach(group => {
+        const rule = group.dataset.rule;
+        const saved = scores[rule];
+        group.querySelectorAll('button').forEach(btn => {
+          btn.classList.toggle('selected', btn.dataset.value === saved);
+        });
+        group.onclick = (e) => {
+          const btn = e.target.closest('button');
+          if(!btn) return;
+          group.querySelectorAll('button').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          saveCurrentScores();
+        };
+      });
+
+      // 总分独立 5 档手动选择
+      const totalChoice = document.querySelector('#totalChoice');
+      const savedOverall = (q.evaluation && q.evaluation.overall) || '';
+      totalChoice.querySelectorAll('button').forEach(btn => {
+        btn.classList.toggle('selected', btn.dataset.value === savedOverall);
+      });
+      totalChoice.onclick = (e) => {
+        const btn = e.target.closest('button');
+        if(!btn) return;
+        totalChoice.querySelectorAll('button').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        saveCurrentScores();
+      };
+
+      updateTotalScoreLabel();
+    }
+
+    function saveCurrentScores(){
+      const task = getTask(currentTaskId);
+      const q = task.questions[currentQuestionIndex];
+      if(!q.evaluation) q.evaluation = { scores: {}, reasons: [], timeSpent: 0 };
+
+      document.querySelectorAll('.gsb-choice').forEach(group => {
+        const rule = group.dataset.rule;
+        const selected = group.querySelector('button.selected');
+        q.evaluation.scores[rule] = selected ? selected.dataset.value : '';
+      });
+
+      // 总分为独立手动选择，不再自动计算
+      const totalSelected = document.querySelector('#totalChoice button.selected');
+      q.evaluation.overall = totalSelected ? totalSelected.dataset.value : '';
+
+      q.evaluation.timeSpent = Math.floor((Date.now() - questionStartedAt) / 1000);
+      saveTask(task);
+      updateTotalScoreLabel();
+      updateProgressDisplay();
+      renderQuestionsList();
+    }
+
+    function updateTotalScoreLabel(){
+      const task = getTask(currentTaskId);
+      const q = task.questions[currentQuestionIndex];
+      const label = document.querySelector('#totalScoreLabel');
+      if(q.evaluation && q.evaluation.overall){
+        label.textContent = q.evaluation.overall;
+      } else {
+        label.textContent = '尚未选择';
+      }
+    }
+
+    function renderReasons(q){
+      const list = document.querySelector('#reasonList');
+      const reasons = (q.evaluation && q.evaluation.reasons) || [];
+      document.querySelector('#reasonCount').textContent = reasons.length;
+      if(reasons.length === 0){
+        list.innerHTML = '<div style="color:var(--muted);font-size:11px;text-align:center;padding:12px">暂无评价理由</div>';
+        return;
+      }
+      list.innerHTML = reasons.map((r, i) => `
+        <div class="reason-item ${r.polarity === 'negative' ? 'negative' : ''}">
+          <small>${r.polarity === 'negative' ? '−' : '＋'} ${r.dimension}</small>
+          ${r.text}
+        </div>`).join('');
+    }
+
+    function updateProgressDisplay(){
+      const task = getTask(currentTaskId);
+      const total = task.questions.length;
+      const done = task.questions.filter(isQuestionDone).length;
+      document.querySelector('#completedCount').textContent = done;
+      document.querySelector('#totalCount').textContent = total;
+    }
+
+    function appendReason(text, dimension, polarity){
+      const task = getTask(currentTaskId);
+      const q = task.questions[currentQuestionIndex];
+      if(!q.evaluation) q.evaluation = { scores: {}, reasons: [], timeSpent: 0 };
+      q.evaluation.reasons.push({ text, dimension, polarity });
+      saveTask(task);
+      renderReasons(q);
+    }
+
+    function isMeaningfulReason(text){
+      const cleaned = text.replace(/\s/g,'');
+      const generic = /^(好|很好|不错|可以|同意|无|没问题|正常|一般|挺好|不行|差|对|嗯|是)$/;
+      const repeated = /^(.)\1+$/;
+      return cleaned.length >= 4 && !generic.test(cleaned) && !repeated.test(cleaned);
+    }
+
+    const tasksPage = document.querySelector('#tasksPage');
+    const evalPage = document.querySelector('#evalPage');
+    const resultsPage = document.querySelector('#resultsPage');
+    const crumb = document.querySelector('#crumb');
+    const crumbMore = document.querySelector('#crumbMore');
+
+    function showTasks(){
+      tasksPage.hidden = false;
+      evalPage.hidden = true;
+      resultsPage.hidden = true;
+      crumb.textContent = '任务管理';
+      crumbMore.textContent = '';
+      document.querySelectorAll('.nav-item').forEach(x => x.classList.toggle('active', x.dataset.page === 'tasks'));
+      renderTasks();
+    }
+
+    document.querySelector('#backTasks').addEventListener('click', showTasks);
+    document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('click', () => {
+      if(btn.dataset.page === 'tasks') showTasks();
+      else if(currentTaskId) showEval();
+    }));
+
+    document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentTab = tab.dataset.tab;
+      renderTasks();
+    }));
+
+    document.querySelector('#clearAll').addEventListener('click', () => {
+      if(confirm('确定清空所有数据？此操作不可恢复！')){
+        localStorage.removeItem(STORAGE_KEY);
+        renderTasks();
+        showToast('已清空所有数据');
+      }
+    });
+
+    document.querySelectorAll('[data-polarity]').forEach(btn => btn.addEventListener('click', () => {
+      currentPolarity = btn.dataset.polarity;
+      document.querySelectorAll('[data-polarity]').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    }));
+
+    document.querySelector('#addReason').addEventListener('click', () => {
+      const input = document.querySelector('#reasonText');
+      const text = input.value.trim();
+      const warning = document.querySelector('#reasonWarning');
+      if(!isMeaningfulReason(text)){
+        warning.classList.add('show');
+        input.focus();
+        return;
+      }
+      warning.classList.remove('show');
+      const dim = document.querySelector('#reasonDimension');
+      const dimText = dim.options[dim.selectedIndex].text;
+      appendReason(text, dimText, currentPolarity);
+      input.value = '';
+      showToast('评价理由已添加');
+    });
+
+    document.querySelectorAll('.answer').forEach(area => area.addEventListener('mouseup', () => {
+      const sel = window.getSelection();
+      if(!sel.rangeCount || sel.isCollapsed || !area.contains(sel.anchorNode)){
+        const menu = document.querySelector('#annotationMenu');
+        if(menu) menu.classList.remove('show');
+        return;
+      }
+      const range = sel.getRangeAt(0).cloneRange();
+      const rect = range.getBoundingClientRect();
+      let menu = document.querySelector('#annotationMenu');
+      if(!menu){
+        menu = document.createElement('div');
+        menu.id = 'annotationMenu';
+        menu.className = 'annotation-menu';
+        menu.innerHTML = '<span>划线标注</span><button data-mark="positive">＋ 正向</button><button data-mark="negative">− 负向</button>';
+        document.body.appendChild(menu);
+      }
+      menu.style.left = Math.min(rect.left, window.innerWidth - 190) + 'px';
+      menu.style.top = (rect.bottom + 8) + 'px';
+      menu.classList.add('show');
+      menu._range = range;
+    }));
+
+    document.addEventListener('click', (e) => {
+      const menu = document.querySelector('#annotationMenu');
+      if(!menu) return;
+      if(!menu.contains(e.target) && !e.target.closest('.answer')){
+        menu.classList.remove('show');
+      }
+    });
+
+    document.body.addEventListener('click', (e) => {
+      const btn = e.target.closest('#annotationMenu button');
+      if(!btn) return;
+      const tone = btn.dataset.mark;
+      const menu = document.querySelector('#annotationMenu');
+      const range = menu._range;
+      if(!tone || !range) return;
+      const mark = document.createElement('mark');
+      mark.className = 'mark-' + tone;
+      try {
+        const fragment = range.extractContents();
+        mark.appendChild(fragment);
+        range.insertNode(mark);
+        const dim = document.querySelector('#reasonDimension');
+        const dimText = dim.options[dim.selectedIndex].text;
+        appendReason('已划线标注：' + mark.textContent, dimText, tone);
+        showToast('已添加' + (tone === 'positive' ? '正向' : '负向') + '划线评价');
+      } catch(err){
+        showToast('请选择同一段文字后再添加评价');
+      }
+      window.getSelection().removeAllRanges();
+      menu.classList.remove('show');
+    });
+
+    document.querySelector('#saveEval').addEventListener('click', () => {
+      saveCurrentScores();
+      const task = getTask(currentTaskId);
+      const q = task.questions[currentQuestionIndex];
+      const scores = (q.evaluation && q.evaluation.scores) || {};
+      const missingDim = ['W','O'].filter(k => !scores[k]);
+      if(missingDim.length > 0){
+        showToast('请完成维度评分：缺少 ' + missingDim.map(k => k==='W'?'文风表达':'组织逻辑').join('、'));
+        return;
+      }
+      if(!q.evaluation.overall){
+        showToast('请手动选择整体总分（5 档）');
+        return;
+      }
+      showToast('已保存本题评估');
+      if(currentQuestionIndex < task.questions.length - 1){
+        currentQuestionIndex++;
+        renderQuestionsList();
+        renderQuestion();
+      } else {
+        showToast('🎉 所有题目已评估完成！');
+        updateProgressDisplay();
+      }
+    });
+
+    const resultsPageEl = document.querySelector('#resultsPage');
+    function showResults(){
+      const task = getTask(currentTaskId);
+      if(!task){ showToast('任务不存在'); showTasks(); return; }
+
+      tasksPage.hidden = true;
+      evalPage.hidden = true;
+      resultsPage.hidden = false;
+      crumb.textContent = '任务管理';
+      crumbMore.textContent = `  /  ${task.id}  /  评估结果`;
+
+      document.querySelector('#resultTaskId').textContent = `${task.id} · ${task.name}`;
+      const status = calcTaskStatus(task);
+      document.querySelector('#resultStatus').textContent = '状态：' + {pending:'待评估',progress:'进行中',done:'已完成'}[status];
+      const done = task.questions.filter(isQuestionDone).length;
+      document.querySelector('#resultProgress').textContent = `完成题目：${done} / ${task.questions.length}`;
+
+      const isASide = v => v === 'A更优' || v === 'A略优';
+      const isBSide = v => v === 'B更优' || v === 'B略优';
+      const isTie   = v => v === '持平';
+
+      let totalReasons = 0;
+      let aWins = 0, bWins = 0, ties = 0;
+      const dimWins = { W: { A: 0, B: 0, tie: 0 }, O: { A: 0, B: 0, tie: 0 } };
+      (task.questions || []).forEach(q => {
+        if(q.evaluation && q.evaluation.scores){
+          totalReasons += (q.evaluation.reasons || []).length;
+          Object.entries(q.evaluation.scores).forEach(([dim, val]) => {
+            if(dimWins[dim]){
+              if(isASide(val)) dimWins[dim].A++;
+              else if(isBSide(val)) dimWins[dim].B++;
+              else if(isTie(val)) dimWins[dim].tie++;
+            }
+          });
+          if(isASide(q.evaluation.overall)) aWins++;
+          else if(isBSide(q.evaluation.overall)) bWins++;
+          else if(isTie(q.evaluation.overall)) ties++;
+        }
+      });
+
+      document.querySelector('#resultEvaluator').textContent = '评估人：当前用户';
+      document.querySelector('#resultReasonCount').textContent = `有效评价理由：${totalReasons} 条`;
+
+      const total = task.questions.length || 1;
+      if(aWins + bWins + ties > 0){
+        document.querySelector('#overallWinner').textContent = aWins > bWins && aWins > ties ? 'A' : (bWins > aWins && bWins > ties ? 'B' : '持平');
+        document.querySelector('#resultSummaryText').textContent =
+          `在已评的 ${aWins + bWins + ties} 题中，A 胜出 ${aWins} 题，B 胜出 ${bWins} 题，持平 ${ties} 题。`;
+      } else {
+        document.querySelector('#overallWinner').textContent = '–';
+        document.querySelector('#resultSummaryText').textContent = '请完成更多题目评估以生成汇总。';
+      }
+
+      document.querySelector('#dimensionBreakdown').innerHTML = [
+        { key:'W', name:'文风表达', wins: dimWins.W },
+        { key:'O', name:'组织逻辑', wins: dimWins.O }
+      ].map(d => {
+        const totalD = d.wins.A + d.wins.B + d.wins.tie || 1;
+        const winner = d.wins.A > d.wins.B && d.wins.A > d.wins.tie ? 'A' : (d.wins.B > d.wins.A && d.wins.B > d.wins.tie ? 'B' : '持平');
+        const pct = winner === 'A' ? Math.round(d.wins.A/totalD*100) : winner === 'B' ? Math.round(d.wins.B/totalD*100) : Math.round(d.wins.tie/totalD*100);
+        return `<div class="result-dim"><b>${d.name}</b><span>${winner} ${pct}% 胜出</span></div>`;
+      }).join('');
+
+      const allReasons = [];
+      (task.questions || []).forEach((q, idx) => {
+        if(q.evaluation && q.evaluation.reasons){
+          q.evaluation.reasons.forEach(r => {
+            allReasons.push({ ...r, query: q.query, qIdx: idx + 1 });
+          });
+        }
+      });
+      allReasons.sort((a, b) => (a.polarity === 'negative' ? -1 : 1) - (b.polarity === 'negative' ? -1 : 1));
+      const displayReasons = allReasons.slice(0, 10);
+      document.querySelector('#resultReasons').innerHTML = displayReasons.length === 0
+        ? '<p style="color:var(--muted);font-size:12px;text-align:center;padding:20px">暂无评价理由</p>'
+        : displayReasons.map(r => `
+          <div class="reason-item ${r.polarity === 'negative' ? 'negative' : ''}">
+            <small>${r.polarity === 'negative' ? '−' : '＋'} ${r.dimension} · 第${r.qIdx}题</small>
+            ${r.text}
+          </div>`).join('');
+
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
+
+    document.querySelector('#showResults').addEventListener('click', () => {
+      saveCurrentScores();
+      showResults();
+    });
+    document.querySelector('#backEvaluation').addEventListener('click', () => {
+      resultsPage.hidden = true;
+      showEval();
+    });
+
+    document.querySelector('#exportResults').addEventListener('click', () => {
+      const task = getTask(currentTaskId);
+      if(!task) return;
+      const isASide = v => v === 'A更优' || v === 'A略优';
+      const isBSide = v => v === 'B更优' || v === 'B略优';
+      const isTie   = v => v === '持平';
+      const report = {
+        taskId: task.id,
+        taskName: task.name,
+        exportTime: new Date().toISOString(),
+        scoringLevels: ['A更优','A略优','持平','B略优','B更优'],
+        summary: {
+          totalQuestions: task.questions.length,
+          completedQuestions: task.questions.filter(isQuestionDone).length,
+          dimensionStats: {},
+          overallDistribution: { 'A更优':0,'A略优':0,'持平':0,'B略优':0,'B更优':0 },
+          overallWinner: ''
+        },
+        questions: []
+      };
+      const dimWins = { W: { A: 0, B: 0, tie: 0 }, O: { A: 0, B: 0, tie: 0 } };
+      let aWins = 0, bWins = 0, ties = 0;
+      (task.questions || []).forEach(q => {
+        if(q.evaluation && q.evaluation.scores){
+          Object.entries(q.evaluation.scores).forEach(([dim, val]) => {
+            if(dimWins[dim]){
+              if(isASide(val)) dimWins[dim].A++;
+              else if(isBSide(val)) dimWins[dim].B++;
+              else if(isTie(val)) dimWins[dim].tie++;
+            }
+          });
+          const ov = q.evaluation.overall;
+          if(ov && report.summary.overallDistribution[ov] !== undefined) report.summary.overallDistribution[ov]++;
+          if(isASide(ov)) aWins++;
+          else if(isBSide(ov)) bWins++;
+          else if(isTie(ov)) ties++;
+        }
+        report.questions.push({
+          query: q.query,
+          answerA: q.answerA,
+          answerB: q.answerB,
+          scores: q.evaluation ? q.evaluation.scores : {},
+          overall: q.evaluation ? q.evaluation.overall : '',
+          reasons: q.evaluation ? q.evaluation.reasons : [],
+          timeSpent: q.evaluation ? q.evaluation.timeSpent : 0
+        });
+      });
+      report.summary.dimensionStats = dimWins;
+      report.summary.overallWinner = aWins > bWins && aWins > ties ? 'A' : (bWins > aWins && bWins > ties ? 'B' : '持平');
+
+      const blob = new Blob([JSON.stringify(report, null, 2)], {type: 'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `GSB_Report_${task.id}_${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('结果报告已导出');
+    });
+
+    document.querySelector('#exportRaw').addEventListener('click', () => {
+      const task = getTask(currentTaskId);
+      if(!task) return;
+      const rows = [['题号', '问题', '回答A', '回答B', '文风表达', '组织逻辑', '总体', '理由数', '耗时(秒)']];
+      (task.questions || []).forEach((q, i) => {
+        const scores = (q.evaluation && q.evaluation.scores) || {};
+        rows.push([
+          i+1, q.query,
+          isImageContent(q.answerA) ? '[图片]' : (q.answerA || '').substring(0, 100),
+          isImageContent(q.answerB) ? '[图片]' : (q.answerB || '').substring(0, 100),
+          scores.W || '', scores.O || '',
+          (q.evaluation && q.evaluation.overall) || '',
+          (q.evaluation && q.evaluation.reasons) ? q.evaluation.reasons.length : 0,
+          (q.evaluation && q.evaluation.timeSpent) || 0
+        ]);
+      });
+      const csv = '\ufeff' + rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+      const blob = new Blob([csv], {type: 'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `GSB_Export_${task.id}_${Date.now()}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('原始数据已导出');
+    });
+
+    // 评估页：一键导出评估数据（JSON + CSV，附完成状态）
+    document.querySelector('#exportEvalData').addEventListener('click', () => {
+      // 先保存当前正在编辑的题目
+      try { saveCurrentScores(); } catch(e) {}
+      const task = getTask(currentTaskId);
+      if(!task){ showToast('未选择任务'); return; }
+
+      // 询问导出格式
+      const fmt = (prompt('请选择导出格式：输入 1 = JSON（完整数据）；输入 2 = CSV（表格）', '1') || '').trim();
+      if(fmt !== '1' && fmt !== '2'){ showToast('已取消导出'); return; }
+
+      const isASide = v => v === 'A更优' || v === 'A略优';
+      const isBSide = v => v === 'B更优' || v === 'B略优';
+      const isTie   = v => v === '持平';
+
+      if(fmt === '1'){
+        const payload = {
+          taskId: task.id,
+          taskName: task.name,
+          description: task.description || '',
+          exportTime: new Date().toISOString(),
+          scoringLevels: ['A更优','A略优','持平','B略优','B更优'],
+          totalQuestions: task.questions.length,
+          completedQuestions: task.questions.filter(isQuestionDone).length,
+          questions: (task.questions || []).map((q, i) => ({
+            index: i + 1,
+            query: q.query,
+            answerA: q.answerA,
+            answerB: q.answerB,
+            userProfile: q.userProfile || null,
+            evaluation: q.evaluation || null,
+            isDone: isQuestionDone(q)
+          }))
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `GSB_Eval_${task.id}_${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('评估数据已导出（JSON）');
+      } else {
+        const rows = [[
+          '题号','问题','回答A','回答B',
+          '文风表达','组织逻辑','整体总分(手动)',
+          '完成状态','评价理由数','评价理由(合并)','耗时(秒)'
+        ]];
+        (task.questions || []).forEach((q, i) => {
+          const scores = (q.evaluation && q.evaluation.scores) || {};
+          const reasons = (q.evaluation && q.evaluation.reasons) || [];
+          const reasonText = reasons.map(r =>
+            `[${r.polarity === 'negative' ? '−' : '＋'}${r.dimension}] ${r.text}`
+          ).join(' ｜ ');
+          rows.push([
+            i+1, q.query,
+            isImageContent(q.answerA) ? '[图片] ' + q.answerA : (q.answerA || ''),
+            isImageContent(q.answerB) ? '[图片] ' + q.answerB : (q.answerB || ''),
+            scores.W || '', scores.O || '',
+            (q.evaluation && q.evaluation.overall) || '',
+            isQuestionDone(q) ? '已完成' : '未完成',
+            reasons.length, reasonText,
+            (q.evaluation && q.evaluation.timeSpent) || 0
+          ]);
+        });
+        const csv = '\ufeff' + rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+        const blob = new Blob([csv], {type:'text/csv'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `GSB_Eval_${task.id}_${Date.now()}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('评估数据已导出（CSV）');
+      }
+    });
+
+    const createSheet = document.querySelector('#createSheet');
+    document.querySelector('#openCreate').onclick = () => createSheet.classList.add('open');
+    document.querySelector('#closeCreate').onclick = () => createSheet.classList.remove('open');
+    document.querySelector('#createTask').onclick = () => {
+      const name = document.querySelector('#newTaskName').value.trim();
+      const desc = document.querySelector('#newTaskDesc').value.trim();
+      if(!name){ showToast('请输入任务名称'); return; }
+      const newTask = {
+        id: 'GSB-' + String(Date.now()).slice(-4),
+        name, description: desc,
+        createdAt: new Date().toISOString(),
+        questions: []
+      };
+      saveTask(newTask);
+      createSheet.classList.remove('open');
+      document.querySelector('#newTaskName').value = '';
+      document.querySelector('#newTaskDesc').value = '';
+      renderTasks();
+      showToast('任务已创建，请导入或添加题目');
+    };
+
+    const importSheet = document.querySelector('#importSheet');
+    const uploadZone = document.querySelector('#uploadZone');
+    const fileInput = document.querySelector('#fileInput');
+    const importConfig = document.querySelector('#importConfig');
+    const excelPreview = document.querySelector('#excelPreview');
+    const colMapping = document.querySelector('#colMapping');
+    const pasteInput = document.querySelector('#pasteInput');
+    const advancedContent = document.querySelector('#advancedContent');
+
+    function resetImportDialog(type = 'excel'){
+      importSourceType = type;
+      excelData = null;
+      importConfig.style.display = 'none';
+      uploadZone.style.display = '';
+      document.querySelector('#importTaskName').value = '';
+      document.querySelector('#fileInput').value = '';
+      if(pasteInput) pasteInput.value = '';
+      document.querySelectorAll('.import-tab').forEach(tab => tab.classList.toggle('active', tab.dataset.importType === type));
+      document.querySelectorAll('.import-pane').forEach(pane => pane.classList.remove('active'));
+      document.querySelector(type === 'excel' ? '#excelPane' : '#feishuPane').classList.add('active');
+    }
+
+    document.querySelector('#importExcel').onclick = () => {
+      importSheet.classList.add('open');
+      resetImportDialog('excel');
+      loadXLSXLibrary().catch(() => {});
+    };
+    document.querySelector('#cancelImport').onclick = () => importSheet.classList.remove('open');
+
+    document.querySelectorAll('.import-tab').forEach(tab => tab.addEventListener('click', () => {
+      resetImportDialog(tab.dataset.importType);
+    }));
+
+    document.querySelector('#toggleAdvanced').addEventListener('click', () => {
+      advancedContent.classList.toggle('open');
+      document.querySelector('#toggleAdvanced').textContent = advancedContent.classList.contains('open') ? '− 收起高级选项' : '＋ 高级选项：飞书链接解析';
+    });
+
+    document.querySelector('#parsePaste').addEventListener('click', () => {
+      const text = pasteInput.value.trim();
+      const url = document.querySelector('#feishuUrl').value.trim();
+      if(!text){
+        showToast(url ? '当前页面仅支持粘贴解析；链接读取需要后端 API Token 配置' : '请先粘贴飞书表格内容');
+        return;
+      }
+      const data = parsePastedTable(text);
+      if(data.length === 0){ showToast('未解析到有效表格数据'); return; }
+      excelData = data;
+      importSourceType = 'feishu';
+      showExcelPreview(data);
+      showColMapping(data);
+      importConfig.style.display = '';
+      document.querySelector('#importTaskName').value = '飞书表格导入任务';
+    });
+
+    uploadZone.addEventListener('click', () => fileInput.click());
+    uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadZone.classList.remove('dragover');
+      if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', (e) => {
+      if(e.target.files.length) handleFile(e.target.files[0]);
+    });
+
+    function parseDelimitedLine(line, delimiter){
+      const cells = [];
+      let current = '';
+      let quoted = false;
+      for(let i = 0; i < line.length; i++){
+        const ch = line[i];
+        const next = line[i + 1];
+        if(ch === '"'){
+          if(quoted && next === '"'){ current += '"'; i++; }
+          else quoted = !quoted;
+        } else if(ch === delimiter && !quoted){
+          cells.push(current.trim());
+          current = '';
+        } else {
+          current += ch;
+        }
+      }
+      cells.push(current.trim());
+      return cells;
+    }
+
+    function parsePastedTable(text){
+      const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(line => line.trim());
+      if(lines.length < 2) return [];
+      const delimiter = lines[0].includes('\t') ? '\t' : ',';
+      const headers = parseDelimitedLine(lines[0], delimiter).map((h, i) => h || `列${i + 1}`);
+      return lines.slice(1).map(line => {
+        const values = parseDelimitedLine(line, delimiter);
+        const row = {};
+        headers.forEach((h, i) => row[h] = values[i] || '');
+        return row;
+      }).filter(row => Object.values(row).some(v => String(v).trim()));
+    }
+
+    function loadXLSXLibrary(){
+      if(window.XLSX) return Promise.resolve(window.XLSX);
+      if(xlsxLoader) return xlsxLoader;
+      xlsxLoader = new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+        script.async = true;
+        script.onload = () => resolve(window.XLSX);
+        script.onerror = () => {
+          xlsxLoader = null;
+          reject(new Error('Excel 解析库加载失败，请检查网络后重试'));
+        };
+        document.head.appendChild(script);
+      });
+      return xlsxLoader;
+    }
+
+    async function handleFile(file){
+      importSourceType = 'excel';
+      try {
+        await loadXLSXLibrary();
+      } catch(err) {
+        showToast(err.message || 'Excel 解析组件加载失败');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const wb = XLSX.read(e.target.result, { type: 'array' });
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          const data = XLSX.utils.sheet_to_json(ws, { defval: '' });
+          if(data.length === 0){ showToast('Excel 文件为空'); return; }
+          excelData = data;
+          showExcelPreview(data);
+          showColMapping(data);
+          uploadZone.style.display = 'none';
+          importConfig.style.display = '';
+        } catch(err) {
+          showToast('文件解析失败：' + err.message);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function showExcelPreview(data){
+      const headers = Object.keys(data[0]);
+      const preview = data.slice(0, 6);
+      excelPreview.innerHTML = `
+        <div style="padding:8px 12px;font-weight:700;font-size:12px">📊 数据预览（共 ${data.length} 行，${headers.length} 列）</div>
+        <table>
+          <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+          <tbody>${preview.map(row => `<tr>${headers.map(h => `<td>${String(row[h] || '').substring(0, 30)}</td>`).join('')}</tr>`).join('')}</tbody>
+        </table>`;
+    }
+
+    function showColMapping(data){
+      const headers = Object.keys(data[0]);
+      const fields = [
+        { key: 'query', label: '问题 (query)', required: true },
+        { key: 'answerA', label: '回答 A', required: true },
+        { key: 'answerB', label: '回答 B', required: true },
+        { key: 'tags', label: '用户标签（可选）', required: false },
+        { key: 'note', label: '用户备注（可选）', required: false }
+      ];
+      colMapping.innerHTML = fields.map(f => {
+        const options = ['<option value="">-- 无 --</option>', ...headers.map(h =>
+          `<option value="${h}">${h}</option>`
+        )];
+        return `<div class="mapping-item">
+          <label>${f.label}${f.required ? ' *' : ''}</label>
+          <select data-field="${f.key}">${options.join('')}</select>
+        </div>`;
+      }).join('');
+
+      headers.forEach(h => {
+        const lower = h.toLowerCase().replace(/\s/g, '');
+        if(lower.includes('query') || lower.includes('问题') || lower.includes('question') || lower.includes('prompt')){
+          const sel = colMapping.querySelector(`[data-field="query"]`);
+          if(sel) sel.value = h;
+        } else if(lower.includes('回答a') || lower.includes('答案a') || lower.includes('answera') || lower === 'a'){
+          const sel = colMapping.querySelector(`[data-field="answerA"]`);
+          if(sel) sel.value = h;
+        } else if(lower.includes('回答b') || lower.includes('答案b') || lower.includes('answerb') || lower === 'b'){
+          const sel = colMapping.querySelector(`[data-field="answerB"]`);
+          if(sel) sel.value = h;
+        } else if(lower.includes('tag') || lower.includes('标签')){
+          const sel = colMapping.querySelector(`[data-field="tags"]`);
+          if(sel) sel.value = h;
+        } else if(lower.includes('note') || lower.includes('备注') || lower.includes('画像')){
+          const sel = colMapping.querySelector(`[data-field="note"]`);
+          if(sel) sel.value = h;
+        }
+      });
+    }
+
+    function handleConfirmImport(){
+      try {
+        if(!excelData){ showToast('请先导入或粘贴表格数据'); return; }
+        const taskName = document.querySelector('#importTaskName').value.trim();
+        if(!taskName){ showToast('请输入任务名称'); return; }
+
+        const mappings = {};
+        colMapping.querySelectorAll('select').forEach(sel => {
+          mappings[sel.dataset.field] = sel.value;
+        });
+
+        if(!mappings.query || !mappings.answerA || !mappings.answerB){
+          showToast('请映射必填字段（问题、回答A、回答B）');
+          return;
+        }
+
+        const questions = excelData.map(row => {
+          const tagsStr = mappings.tags ? String(row[mappings.tags] || '') : '';
+          const noteStr = mappings.note ? String(row[mappings.note] || '') : '';
+          return {
+            query: String(row[mappings.query] || ''),
+            answerA: String(row[mappings.answerA] || ''),
+            answerB: String(row[mappings.answerB] || ''),
+            userProfile: {
+              tags: tagsStr ? tagsStr.split(/[,，、;；]/).map(t => t.trim()).filter(Boolean) : [],
+              note: noteStr
+            },
+            evaluation: null
+          };
+        }).filter(q => q.query);
+
+        if(questions.length === 0){ showToast('没有有效题目'); return; }
+
+        const newTask = {
+          id: 'GSB-' + String(Date.now()).slice(-4),
+          name: taskName,
+          description: (importSourceType === 'feishu' ? '飞书表格导入 · ' : 'Excel 导入 · ') + questions.length + ' 题',
+          createdAt: new Date().toISOString(),
+          questions
+        };
+        saveTask(newTask);
+        importSheet.classList.remove('open');
+        renderTasks();
+        showToast(`已导入 ${questions.length} 道题目`);
+      } catch(err) {
+        console.error('confirm import failed:', err);
+        showToast('导入失败：' + (err && err.message ? err.message : '未知错误'));
+      }
+    }
+
+    document.querySelector('#confirmImport').addEventListener('click', handleConfirmImport);
+
+    const authSheet = document.querySelector('#authSheet');
+    document.querySelector('#accountBtn').onclick = () => authSheet.classList.add('open');
+    document.querySelector('#closeAuth').onclick = () => authSheet.classList.remove('open');
+    document.querySelectorAll('[data-auth]').forEach(tab => tab.addEventListener('click', () => {
+      document.querySelectorAll('[data-auth]').forEach(x => x.classList.remove('active'));
+      tab.classList.add('active');
+      const register = tab.dataset.auth === 'register';
+      document.querySelector('#roleField').hidden = !register;
+      document.querySelector('#submitAuth').textContent = register ? '注册并登录' : '登录';
+    }));
+    document.querySelectorAll('.role-option').forEach(opt => opt.addEventListener('click', () => {
+      document.querySelectorAll('.role-option').forEach(x => x.classList.remove('selected'));
+      opt.classList.add('selected');
+    }));
+    document.querySelector('#submitAuth').onclick = () => {
+      const account = document.querySelector('#accountInput');
+      if(!account.value.trim()){ account.focus(); return; }
+      authSheet.classList.remove('open');
+      showToast('登录成功，欢迎回来');
+    };
+
+    renderTasks();
+  })();
+  </script>
+</body>
+</html>
