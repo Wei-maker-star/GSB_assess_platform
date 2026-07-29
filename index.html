@@ -83,27 +83,36 @@
     .empty-state{text-align:center;padding:60px 20px;color:var(--muted)}.empty-state .empty-icon{font-size:48px;margin-bottom:12px;opacity:.5}.empty-state h3{color:var(--ink);font-size:18px;margin:0 0 8px}.empty-state p{font-size:13px;margin:0 0 20px}
     @media(max-width:1100px){.eval{grid-template-columns:210px minmax(500px,1fr)}.right-panel{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr}.scorebox{border-left:1px solid var(--line)}.task-row{grid-template-columns:minmax(220px,2fr) 1fr 1fr 1fr 34px}.task-row .hide-sm{display:none}} @media(max-width:780px){.app{grid-template-columns:1fr}.side{height:auto;position:static;padding:14px 16px;flex-direction:row;align-items:center;gap:16px}.brand{padding:0;margin-right:auto}.side .eyebrow,.side-foot{display:none}nav{display:flex}.nav-item{padding:8px}.nav-item span{display:none}.topbar{height:58px}.page{padding:27px 18px}.page-head{display:block}.page-head .button{margin-top:15px}.task-row{grid-template-columns:1fr auto;padding:16px 3px}.task-row>*:not(:first-child):not(:last-child){display:none}.eval{display:block}.left-panel{margin-bottom:18px}.questions{display:flex;overflow:auto}.question{min-width:200px;border-bottom:0;border-right:1px solid var(--line)}.profile{display:none}.phones{gap:10px}.phone{border-width:5px;height:430px;border-radius:22px}.answer{height:380px;padding:15px 13px;font-size:11px}.mobile-head{height:48px;padding:19px 13px 6px}.criteria{margin-top:16px}.right-panel{display:block;margin-top:16px}.scorebox{border-top:1px solid var(--line)}.top-actions .icon-btn{display:none}}
   </style>
-  <!-- 飞书 H5 JSSDK：仅在飞书客户端内会真正生效；浏览器打开会静默失败，走 OAuth 兜底 -->
-  <script src="https://lf1-cdn-tos.bytegoofy.com/goofy/lark/op/h5-js-sdk-1.5.35.js"></script>
   <style>
-    /* ---- 飞书集成：登录闸 + 角色选择 + 顶部用户徽章 ---- */
-    .fs-gate{position:fixed;inset:0;background:linear-gradient(135deg,#155e45 0%,#0f3d2c 100%);z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px}
-    .fs-gate .card{background:#fefffb;border-radius:16px;padding:36px 32px;max-width:420px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.25);text-align:center}
-    .fs-gate h1{font-size:22px;margin:0 0 8px;color:var(--ink)}
-    .fs-gate p{font-size:13px;color:var(--muted);margin:0 0 22px;line-height:1.6}
-    .fs-gate .fs-btn{display:inline-flex;align-items:center;gap:8px;background:#155e45;color:#fff;border:0;padding:12px 22px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 6px 18px rgba(21,94,69,.25)}
-    .fs-gate .fs-btn:hover{background:#104a36}
-    .fs-gate .fs-mini{margin-top:14px;font-size:11px;color:#8a9993}
-    .fs-role{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0 8px}
-    .fs-role button{padding:16px 12px;border:2px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;text-align:left;transition:.15s}
-    .fs-role button:hover{border-color:#9fbea9;background:#f5faf5}
-    .fs-role button.admin{grid-column:1/-1;border-color:#d0b76a;background:#fdf6e3}
-    .fs-role button .r-t{font-weight:700;font-size:14px;color:var(--ink);display:block;margin-bottom:4px}
-    .fs-role button .r-d{font-size:11px;color:var(--muted);line-height:1.5}
-    .fs-user-chip{display:inline-flex;align-items:center;gap:8px;padding:5px 10px 5px 5px;border:1px solid var(--line);border-radius:24px;background:#fff;font-size:12px}
-    .fs-user-chip img{width:24px;height:24px;border-radius:50%;object-fit:cover;background:#eee}
-    .fs-user-chip .role-badge{font-size:10px;padding:2px 6px;border-radius:4px;background:#e3f0e2;color:var(--moss);font-weight:700}
-    .fs-user-chip .role-badge.admin{background:#fdf6e3;color:#8a6a1a}
+    /* ---- 登录注册 + 角色选择 + 用户信息 ---- */
+    .auth-gate{position:fixed;inset:0;background:linear-gradient(135deg,#155e45 0%,#0f3d2c 100%);z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px}
+    .auth-gate .card{background:#fefffb;border-radius:16px;padding:36px 32px;max-width:400px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.25)}
+    .auth-gate h1{font-size:22px;margin:0 0 6px;color:var(--ink);text-align:center}
+    .auth-gate .sub-hint{font-size:13px;color:var(--muted);margin:0 0 20px;text-align:center;line-height:1.6}
+    .auth-tabs{display:flex;border-bottom:2px solid var(--line);margin-bottom:18px}
+    .auth-tabs button{flex:1;background:transparent;border:0;padding:10px 0;font-size:14px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:.15s}
+    .auth-tabs button.active{color:var(--moss);border-bottom-color:var(--moss)}
+    .auth-field{margin-bottom:14px}
+    .auth-field label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px}
+    .auth-field input{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13px;box-sizing:border-box;outline:none;transition:.15s}
+    .auth-field input:focus{border-color:var(--moss);box-shadow:0 0 0 3px rgba(21,94,69,.1)}
+    .auth-submit{width:100%;background:#155e45;color:#fff;border:0;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-top:6px;box-shadow:0 6px 18px rgba(21,94,69,.25)}
+    .auth-submit:hover{background:#104a36}
+    .auth-error{color:#c0392b;font-size:12px;margin-top:8px;min-height:16px;text-align:center}
+    .role-gate{position:fixed;inset:0;background:linear-gradient(135deg,#155e45 0%,#0f3d2c 100%);z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px}
+    .role-gate .card{background:#fefffb;border-radius:16px;padding:36px 32px;max-width:420px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.25);text-align:center}
+    .role-gate h1{font-size:22px;margin:0 0 8px;color:var(--ink)}
+    .role-gate p{font-size:13px;color:var(--muted);margin:0 0 18px;line-height:1.6}
+    .role-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0 8px}
+    .role-cards button{padding:18px 14px;border:2px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;text-align:left;transition:.15s}
+    .role-cards button:hover{border-color:#9fbea9;background:#f5faf5}
+    .role-cards button .r-t{font-weight:700;font-size:14px;color:var(--ink);display:block;margin-bottom:4px}
+    .role-cards button .r-d{font-size:11px;color:var(--muted);line-height:1.5}
+    .role-gate .mini{margin-top:12px;font-size:11px;color:#8a9993}
+    .user-chip{display:inline-flex;align-items:center;gap:8px;padding:5px 10px;border:1px solid var(--line);border-radius:24px;background:#fff;font-size:12px}
+    .user-chip .role-badge{font-size:10px;padding:2px 6px;border-radius:4px;background:#e3f0e2;color:var(--moss);font-weight:700}
+    .user-chip .logout-btn{background:transparent;border:0;color:var(--muted);font-size:11px;cursor:pointer;padding:2px 4px}
+    .user-chip .logout-btn:hover{color:#c0392b}
     .no-perm{opacity:.45;pointer-events:none;filter:grayscale(.4)}
     .import-tab-row{display:flex;gap:8px;margin-bottom:14px;border-bottom:1px solid var(--line)}
     .import-tab-row button{background:transparent;border:0;padding:8px 12px;font-size:13px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;font-weight:600}
@@ -115,22 +124,31 @@
   </style>
 </head>
 <body>
-  <!-- 飞书登录闸：未登录时全屏遮罩 -->
-  <div class="fs-gate" id="fsLoginGate" hidden>
+  <!-- 登录/注册界面 -->
+  <div class="auth-gate" id="authGate">
     <div class="card">
-      <h1>GSB Eval · 飞书登录</h1>
-      <p>请使用飞书账号登录以访问评估平台。<br/>在飞书客户端内会自动完成免密登录。</p>
-      <button class="fs-btn" id="fsLoginBtn">🔐 使用飞书账号登录</button>
-      <div class="fs-mini">App ID: cli_aae3d417d878dbd8</div>
+      <h1>GSB Eval</h1>
+      <p class="sub-hint">评估平台 · 请登录或注册账号</p>
+      <div class="auth-tabs">
+        <button class="active" data-tab="login">登录</button>
+        <button data-tab="register">注册</button>
+      </div>
+      <form id="authForm" autocomplete="off">
+        <div class="auth-field"><label>邮箱</label><input type="email" id="authEmail" placeholder="you@example.com" required></div>
+        <div class="auth-field"><label>密码</label><input type="password" id="authPassword" placeholder="输入密码" required></div>
+        <div class="auth-field" id="authConfirmField" hidden><label>确认密码</label><input type="password" id="authConfirmPassword" placeholder="再次输入密码"></div>
+        <button type="submit" class="auth-submit" id="authSubmitBtn">登录</button>
+        <div class="auth-error" id="authError"></div>
+      </form>
     </div>
   </div>
 
-  <!-- 角色选择弹窗：登录后弹出（若已选择角色则跳过）-->
-  <div class="fs-gate" id="fsRoleGate" hidden>
+  <!-- 角色选择弹窗 -->
+  <div class="role-gate" id="roleGate" hidden>
     <div class="card">
-      <h1>请选择角色</h1>
-      <p id="fsRoleUserHint">欢迎，请选择你在本次评估中的角色。</p>
-      <div class="fs-role">
+      <h1>选择角色</h1>
+      <p id="roleHint">欢迎，请选择你在本次评估中的角色。</p>
+      <div class="role-cards">
         <button data-role="product">
           <span class="r-t">🧭 产品</span>
           <span class="r-d">参与评分、查看结果</span>
@@ -139,12 +157,8 @@
           <span class="r-t">🔎 CQC</span>
           <span class="r-d">参与评分、查看结果</span>
         </button>
-        <button data-role="admin" class="admin" id="fsRoleAdminBtn" hidden>
-          <span class="r-t">👑 管理员</span>
-          <span class="r-d">可创建/取消任务，管理评估流程</span>
-        </button>
       </div>
-      <div class="fs-mini">角色仅影响权限；评分数据都会写入同一份飞书多维表格</div>
+      <div class="mini">所有用户均可创建任务和管理评估流程</div>
     </div>
   </div>
 
@@ -154,14 +168,11 @@
       <header class="topbar">
         <div class="crumb"><strong id="crumb">任务管理</strong><span id="crumbMore"></span></div>
         <div class="top-actions">
-          <button class="icon-btn" aria-label="通知">⌁</button>
-          <button class="icon-btn" aria-label="帮助">?</button>
-          <span id="fsUserChip" class="fs-user-chip" hidden>
-            <img id="fsUserAvatar" alt="avatar" />
-            <span id="fsUserName">未登录</span>
-            <span id="fsUserRole" class="role-badge">—</span>
+          <span id="userChip" class="user-chip" hidden>
+            <span id="userEmail">—</span>
+            <span id="userRoleBadge" class="role-badge">—</span>
+            <button class="logout-btn" id="logoutBtn" title="退出登录">退出</button>
           </span>
-          <button class="avatar" id="accountBtn" aria-label="登录" hidden>GS</button>
         </div>
       </header>
 
@@ -406,30 +417,6 @@
     </div>
   </div>
 
-  <div class="create-sheet" id="authSheet">
-    <div class="dialog">
-      <h2>欢迎使用 GSB Eval</h2>
-      <p>登录后可按产品、CQC 或管理者角色参与任务。</p>
-      <div class="auth-tabs">
-        <button class="auth-tab active" data-auth="login">登录</button>
-        <button class="auth-tab" data-auth="register">注册账号</button>
-      </div>
-      <div class="field"><label>邮箱或账号</label><input id="accountInput" placeholder="请输入邮箱或账号"></div>
-      <div class="field"><label>密码</label><input type="password" placeholder="请输入密码"></div>
-      <div class="field" id="roleField" hidden><label>选择角色</label>
-        <div class="role-options">
-          <button class="role-option selected">产品</button>
-          <button class="role-option">CQC</button>
-          <button class="role-option">管理者</button>
-        </div>
-      </div>
-      <div class="dialog-actions">
-        <button class="button light" id="closeAuth">取消</button>
-        <button class="button" id="submitAuth">登录</button>
-      </div>
-    </div>
-  </div>
-
   <div class="toast" id="toast">操作成功</div>
 
   <script>
@@ -533,10 +520,7 @@
           showToast('任务已删除');
         }
       }));
-      // 每次表格重绘后，按当前角色重新应用权限门
-      if(typeof applyPermissionGate === 'function'){
-        try { applyPermissionGate(fsGetAuth()); } catch(e) {}
-      }
+      // 每次表格重绘后，权限无需特殊处理（所有用户都有完整权限）
     }
 
     function openTask(id){
@@ -1589,65 +1573,128 @@
 
     document.querySelector('#confirmImport').addEventListener('click', handleConfirmImport);
 
-    const authSheet = document.querySelector('#authSheet');
-    document.querySelector('#accountBtn').onclick = () => authSheet.classList.add('open');
-    document.querySelector('#closeAuth').onclick = () => authSheet.classList.remove('open');
-    document.querySelectorAll('[data-auth]').forEach(tab => tab.addEventListener('click', () => {
-      document.querySelectorAll('[data-auth]').forEach(x => x.classList.remove('active'));
-      tab.classList.add('active');
-      const register = tab.dataset.auth === 'register';
-      document.querySelector('#roleField').hidden = !register;
-      document.querySelector('#submitAuth').textContent = register ? '注册并登录' : '登录';
-    }));
-    document.querySelectorAll('.role-option').forEach(opt => opt.addEventListener('click', () => {
-      document.querySelectorAll('.role-option').forEach(x => x.classList.remove('selected'));
-      opt.classList.add('selected');
-    }));
-    document.querySelector('#submitAuth').onclick = () => {
-      const account = document.querySelector('#accountInput');
-      if(!account.value.trim()){ account.focus(); return; }
-      authSheet.classList.remove('open');
-      showToast('登录成功，欢迎回来');
-    };
-
     /* ========================================================================
-       飞书集成：登录 + 角色 + 权限门 + Sheets 导入 + Bitable 导出
-       ------------------------------------------------------------------------
-       - 后端接口：/api/feishu/{config,login,refresh,sheets/read,bitable/append}
-       - 登录方式：
-           1) 飞书客户端内：H5 JSSDK 静默 requestAuthCode，拿 code 换 token
-           2) 浏览器：OAuth 重定向，回调 URL 带 ?code=xxx
-       - 会话存储：localStorage.fsAuth = { user, access_token, refresh_token,
-                                          expires_at, role }
+       邮箱+密码 登录/注册 + 角色选择
+       用户数据存 localStorage('gsbUsers' = [{email, passwordHash, role}])
+       当前会话存 localStorage('gsbSession' = {email, role})
+       所有用户均有完整权限（不做管理员限制）
        ======================================================================== */
 
-    // 【管理员白名单】—— 填写飞书 user_id 或 open_id（在管理员登录一次后，
-    // 打开浏览器 devtools，运行 JSON.parse(localStorage.fsAuth).user 可看到）
-    // 示例："ou_xxxxxxxxxxxxxxxxxxxxxxxxxx"
-    const ADMIN_USER_IDS = [
-      // TODO: 把管理员的 open_id 或 user_id 填进来
-      'PLACEHOLDER_ADMIN_OPEN_ID'
-    ];
+    const USERS_KEY = 'gsbUsers';
+    const SESSION_KEY = 'gsbSession';
 
-    const FS_APP_ID = 'cli_aae3d417d878dbd8';
-    const FS_STATE_KEY = 'fsOAuthState';
-    const FS_AUTH_KEY = 'fsAuth';
+    function getUsers(){
+      try { return JSON.parse(localStorage.getItem(USERS_KEY) || '[]'); } catch(e){ return []; }
+    }
+    function saveUsers(users){ localStorage.setItem(USERS_KEY, JSON.stringify(users)); }
+    function getSession(){
+      try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e){ return null; }
+    }
+    function saveSession(s){ localStorage.setItem(SESSION_KEY, JSON.stringify(s)); }
+    function clearSession(){ localStorage.removeItem(SESSION_KEY); }
 
-    function fsGetAuth(){
-      try { return JSON.parse(localStorage.getItem(FS_AUTH_KEY) || 'null'); }
-      catch(e){ return null; }
-    }
-    function fsSetAuth(a){ localStorage.setItem(FS_AUTH_KEY, JSON.stringify(a)); }
-    function fsClearAuth(){ localStorage.removeItem(FS_AUTH_KEY); }
-    function isAdminUser(u){
-      if(!u) return false;
-      return ADMIN_USER_IDS.some(id => id && id !== 'PLACEHOLDER_ADMIN_OPEN_ID'
-        && (id === u.user_id || id === u.open_id || id === u.union_id));
-    }
-    function isInLarkClient(){
-      return /Lark|Feishu/i.test(navigator.userAgent);
+    // 简易密码哈希（SHA-256 hex，纯前端）
+    async function hashPassword(pw){
+      const enc = new TextEncoder().encode(pw);
+      const buf = await crypto.subtle.digest('SHA-256', enc);
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
     }
 
+    // ---- 登录/注册 UI ----
+    let authMode = 'login'; // 'login' | 'register'
+    const authGate = document.querySelector('#authGate');
+    const roleGate = document.querySelector('#roleGate');
+
+    document.querySelectorAll('.auth-tabs button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.auth-tabs button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        authMode = btn.dataset.tab;
+        document.querySelector('#authConfirmField').hidden = authMode === 'login';
+        document.querySelector('#authSubmitBtn').textContent = authMode === 'login' ? '登录' : '注册';
+        document.querySelector('#authError').textContent = '';
+      });
+    });
+
+    document.querySelector('#authForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.querySelector('#authEmail').value.trim();
+      const password = document.querySelector('#authPassword').value;
+      const errEl = document.querySelector('#authError');
+      errEl.textContent = '';
+
+      if(!email || !password){ errEl.textContent = '请填写邮箱和密码'; return; }
+      if(password.length < 4){ errEl.textContent = '密码至少 4 位'; return; }
+
+      const pwHash = await hashPassword(password);
+      const users = getUsers();
+
+      if(authMode === 'register'){
+        const confirm = document.querySelector('#authConfirmPassword').value;
+        if(password !== confirm){ errEl.textContent = '两次密码不一致'; return; }
+        if(users.find(u => u.email === email)){ errEl.textContent = '该邮箱已注册，请直接登录'; return; }
+        users.push({ email, passwordHash: pwHash, role: '' });
+        saveUsers(users);
+        saveSession({ email, role: '' });
+        showToast('注册成功');
+        onLoginSuccess(email);
+      } else {
+        const user = users.find(u => u.email === email);
+        if(!user){ errEl.textContent = '账号不存在，请先注册'; return; }
+        if(user.passwordHash !== pwHash){ errEl.textContent = '密码错误'; return; }
+        saveSession({ email, role: user.role || '' });
+        showToast('登录成功');
+        onLoginSuccess(email);
+      }
+    });
+
+    function onLoginSuccess(email){
+      authGate.hidden = true;
+      const session = getSession();
+      if(session && session.role){
+        enterApp(session);
+      } else {
+        document.querySelector('#roleHint').textContent = `${email}，请选择你在本次评估中的角色。`;
+        roleGate.hidden = false;
+      }
+    }
+
+    // ---- 角色选择 ----
+    document.querySelectorAll('#roleGate button[data-role]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const role = btn.dataset.role;
+        const session = getSession();
+        if(!session) return;
+        session.role = role;
+        saveSession(session);
+        // 同步到 users 列表
+        const users = getUsers();
+        const u = users.find(x => x.email === session.email);
+        if(u){ u.role = role; saveUsers(users); }
+        roleGate.hidden = true;
+        enterApp(session);
+        showToast(`已以「${{product:'产品',cqc:'CQC'}[role] || role}」身份进入`);
+      });
+    });
+
+    function enterApp(session){
+      authGate.hidden = true;
+      roleGate.hidden = true;
+      // 显示用户信息
+      const chip = document.querySelector('#userChip');
+      chip.hidden = false;
+      document.querySelector('#userEmail').textContent = session.email;
+      document.querySelector('#userRoleBadge').textContent = {product:'产品',cqc:'CQC'}[session.role] || session.role;
+      renderTasks();
+    }
+
+    // ---- 退出登录 ----
+    document.querySelector('#logoutBtn').addEventListener('click', () => {
+      clearSession();
+      location.reload();
+    });
+
+    // ---- apiPost（飞书 API 调用保留） ----
     async function apiPost(path, body){
       const r = await fetch(path, {
         method: 'POST',
@@ -1659,180 +1706,10 @@
       return data;
     }
 
-    // OAuth 重定向登录（浏览器路径）
-    function fsRedirectLogin(){
-      const state = Math.random().toString(36).slice(2);
-      sessionStorage.setItem(FS_STATE_KEY, state);
-      const redirect = encodeURIComponent(location.origin + location.pathname);
-      const authorizeUrl =
-        `https://accounts.feishu.cn/open-apis/authen/v1/authorize?app_id=${FS_APP_ID}` +
-        `&redirect_uri=${redirect}&state=${state}`;
-      location.href = authorizeUrl;
-    }
-
-    // 飞书客户端内静默取 code
-    function fsLarkGetCode(){
-      return new Promise((resolve, reject) => {
-        if(!window.tt || !tt.requestAccess){
-          return reject(new Error('JSSDK 未就绪'));
-        }
-        tt.requestAccess({
-          appID: FS_APP_ID,
-          scopeList: [],
-          success: (r) => resolve(r.code || r.authCode),
-          fail: (e) => reject(new Error(e.errMsg || '飞书授权失败'))
-        });
-      });
-    }
-
-    async function fsExchangeCode(code){
-      const data = await apiPost('/api/feishu/login', { code });
-      const auth = {
-        user: data.user,
-        access_token: data.access_token,
-        refresh_token: data.refresh_token,
-        expires_at: Date.now() + ((data.expires_in || 7200) - 300) * 1000,
-        role: (fsGetAuth() && fsGetAuth().role) || ''
-      };
-      fsSetAuth(auth);
-      return auth;
-    }
-
-    async function fsEnsureAuth(){
-      // 1) 已有会话且未过期
-      const existing = fsGetAuth();
-      if(existing && existing.access_token && existing.expires_at > Date.now()){
-        return existing;
-      }
-      // 2) 有 refresh_token，尝试刷新
-      if(existing && existing.refresh_token){
-        try {
-          const r = await apiPost('/api/feishu/refresh', { refresh_token: existing.refresh_token });
-          if(r && r.access_token){
-            existing.access_token = r.access_token;
-            existing.refresh_token = r.refresh_token || existing.refresh_token;
-            existing.expires_at = Date.now() + ((r.expires_in || 7200) - 300) * 1000;
-            fsSetAuth(existing);
-            return existing;
-          }
-        } catch(e){ /* fallthrough */ }
-      }
-      // 3) URL 有 ?code=xxx 回调
-      const params = new URLSearchParams(location.search);
-      const code = params.get('code');
-      if(code){
-        const savedState = sessionStorage.getItem(FS_STATE_KEY);
-        const state = params.get('state');
-        if(savedState && state && savedState !== state){
-          console.warn('state 不匹配，忽略 code');
-        } else {
-          try {
-            const auth = await fsExchangeCode(code);
-            // 清理 URL
-            history.replaceState({}, '', location.pathname);
-            return auth;
-          } catch(e){
-            showToast('登录失败：' + e.message);
-          }
-        }
-      }
-      // 4) 飞书客户端内尝试静默登录
-      if(isInLarkClient() && window.tt && tt.requestAccess){
-        try {
-          const c = await fsLarkGetCode();
-          if(c) return await fsExchangeCode(c);
-        } catch(e){ console.warn('JSSDK login failed:', e); }
-      }
-      return null;
-    }
-
-    function renderUserChip(auth){
-      const chip = document.querySelector('#fsUserChip');
-      if(!auth || !auth.user){ chip.hidden = true; return; }
-      chip.hidden = false;
-      document.querySelector('#fsUserAvatar').src = auth.user.avatar_url || '';
-      document.querySelector('#fsUserName').textContent = auth.user.name || auth.user.en_name || '飞书用户';
-      const badge = document.querySelector('#fsUserRole');
-      const roleLabel = { admin:'管理员', product:'产品', cqc:'CQC' }[auth.role] || '选择角色';
-      badge.textContent = roleLabel;
-      badge.className = 'role-badge' + (auth.role === 'admin' ? ' admin' : '');
-    }
-
-    function applyPermissionGate(auth){
-      const isAdmin = auth && auth.role === 'admin';
-      // 只有管理员能创建 / 删除任务
-      const create = document.querySelector('#openCreate');
-      if(create) create.classList.toggle('no-perm', !isAdmin);
-      // 清空所有数据也是管理员权限
-      const clearAll = document.querySelector('#clearAllData');
-      if(clearAll) clearAll.classList.toggle('no-perm', !isAdmin);
-      // 删除按钮：每次 renderTasksTable 之后再统一处理
-      document.querySelectorAll('.task-delete').forEach(b => b.classList.toggle('no-perm', !isAdmin));
-      // 导入表格：管理员才能导入
-      const imp = document.querySelector('#importExcel');
-      if(imp) imp.classList.toggle('no-perm', !isAdmin);
-    }
-
-    function openRoleGate(auth){
-      const gate = document.querySelector('#fsRoleGate');
-      document.querySelector('#fsRoleUserHint').textContent =
-        `${auth.user.name || '飞书用户'}，请选择你在本次评估中的角色。`;
-      document.querySelector('#fsRoleAdminBtn').hidden = !isAdminUser(auth.user);
-      gate.hidden = false;
-    }
-    document.querySelectorAll('#fsRoleGate button[data-role]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const role = btn.dataset.role;
-        const auth = fsGetAuth();
-        if(!auth) return;
-        if(role === 'admin' && !isAdminUser(auth.user)){
-          showToast('你不在管理员白名单里，请选择「产品」或「CQC」');
-          return;
-        }
-        auth.role = role;
-        fsSetAuth(auth);
-        document.querySelector('#fsRoleGate').hidden = true;
-        renderUserChip(auth);
-        applyPermissionGate(auth);
-        renderTasks();
-        showToast(`已以「${{admin:'管理员',product:'产品',cqc:'CQC'}[role]}」身份进入`);
-      });
-    });
-
-    document.querySelector('#fsLoginBtn').onclick = () => {
-      if(isInLarkClient()){
-        fsLarkGetCode().then(fsExchangeCode).then(auth => {
-          bootstrapAfterLogin(auth);
-        }).catch(e => {
-          showToast('飞书客户端登录失败：' + e.message + '，改走网页登录');
-          fsRedirectLogin();
-        });
-      } else {
-        fsRedirectLogin();
-      }
-    };
-
-    function bootstrapAfterLogin(auth){
-      document.querySelector('#fsLoginGate').hidden = true;
-      renderUserChip(auth);
-      if(!auth.role){
-        openRoleGate(auth);
-      } else {
-        applyPermissionGate(auth);
-        renderTasks();
-      }
-    }
-
-    // 允许点击用户徽章重新选择角色
-    document.querySelector('#fsUserChip').addEventListener('click', () => {
-      const auth = fsGetAuth();
-      if(auth) openRoleGate(auth);
-    });
-
-    /* -------- 飞书 Sheets URL 一键导入 -------- */
+    /* -------- 飞书 Sheets URL 一键导入（保留，需手动传 access_token）-------- */
     document.querySelector('#fetchFeishu').addEventListener('click', async () => {
-      const auth = fsGetAuth();
-      if(!auth || !auth.access_token){ showToast('请先登录飞书'); return; }
+      const tokenInput = prompt('请输入飞书 user_access_token（从飞书开放平台获取）：');
+      if(!tokenInput){ showToast('已取消'); return; }
       const url = document.querySelector('#feishuUrl').value.trim();
       if(!url){ showToast('请粘贴飞书表格链接'); return; }
 
@@ -1842,22 +1719,18 @@
       btn.textContent = '⏳ 拉取中...';
       try {
         const resp = await apiPost('/api/feishu/sheets/read', {
-          access_token: auth.access_token,
+          access_token: tokenInput,
           url_or_token: url
         });
         const values = resp.values || [];
         if(values.length === 0){ showToast('未读取到数据'); return; }
-        // 把二维数组转成 TSV 并注入现有 pasteInput，复用原有解析链路
-        // 飞书 v2 values 单元格可能是字符串、数字，或图片对象 { type:'embedImage', fileToken, ... }
         const tsv = values.map(row => row.map(cell => {
           if(cell == null) return '';
           if(typeof cell === 'string' || typeof cell === 'number') return String(cell);
           if(Array.isArray(cell)){
-            // 富文本片段数组
             return cell.map(seg => (seg && (seg.text || seg.link || seg.fileToken)) || '').join('');
           }
           if(typeof cell === 'object'){
-            // 图片：把 link 或 fileToken 转成占位 URL
             if(cell.link) return cell.link;
             if(cell.text) return cell.text;
             if(cell.fileToken) return `[飞书图片:${cell.fileToken}]`;
@@ -1876,14 +1749,13 @@
       }
     });
 
-    /* -------- 飞书 Bitable 同步导出 -------- */
+    /* -------- 飞书 Bitable 同步导出（保留，需手动传 access_token）-------- */
     document.querySelector('#syncBitable').addEventListener('click', async () => {
-      const auth = fsGetAuth();
-      if(!auth || !auth.access_token){ showToast('请先登录飞书'); return; }
+      const tokenInput = prompt('请输入飞书 user_access_token（从飞书开放平台获取）：');
+      if(!tokenInput){ showToast('已取消'); return; }
       const task = getTask(currentTaskId);
       if(!task){ showToast('未选择任务'); return; }
 
-      // 提示配置：多维表格 app_token + table_id（记忆到 localStorage）
       const savedApp = localStorage.getItem('fsBitableApp') || '';
       const savedTable = localStorage.getItem('fsBitableTable') || '';
       const appUrl = prompt('请输入飞书多维表格 URL 或 app_token：', savedApp);
@@ -1893,7 +1765,7 @@
       localStorage.setItem('fsBitableApp', appUrl);
       localStorage.setItem('fsBitableTable', tableId);
 
-      // 组装记录：每题一条
+      const session = getSession();
       const rows = [];
       (task.questions || []).forEach((q, i) => {
         if(!isQuestionDone(q)) return;
@@ -1914,9 +1786,8 @@
             '组织逻辑分': scores.O || '',
             '整体GSB分': q.evaluation.overall || '',
             '评价理由': reasonText,
-            '评分人': (auth.user && auth.user.name) || '',
-            '评分人ID': (auth.user && (auth.user.user_id || auth.user.open_id)) || '',
-            '评分角色': auth.role || '',
+            '评分人': (session && session.email) || '',
+            '评分角色': (session && session.role) || '',
             '评分时间': new Date().toISOString()
           }
         });
@@ -1929,7 +1800,7 @@
       btn.textContent = '⏳ 同步中...';
       try {
         const resp = await apiPost('/api/feishu/bitable/append', {
-          access_token: auth.access_token,
+          access_token: tokenInput,
           app_token_or_url: appUrl,
           table_id: tableId,
           records: rows
@@ -1944,13 +1815,16 @@
     });
 
     /* -------- 启动 -------- */
-    (async function fsBootstrap(){
-      const auth = await fsEnsureAuth();
-      if(!auth){
-        document.querySelector('#fsLoginGate').hidden = false;
-        return;
+    (function bootstrap(){
+      const session = getSession();
+      if(session && session.email && session.role){
+        authGate.hidden = true;
+        enterApp(session);
+      } else if(session && session.email){
+        authGate.hidden = true;
+        onLoginSuccess(session.email);
       }
-      bootstrapAfterLogin(auth);
+      // else: authGate stays visible
     })();
 
     renderTasks();
