@@ -244,6 +244,87 @@ app.post('/api/feishu/sheets/read', async (req, res) => {
 });
 
 /**
+ * 创建飞书电子表格并写入数据
+ * body: { access_token, title, rows: [[...表头], [...数据], ...] }
+ * 流程：
+ *   1. POST /open-apis/sheets/v3/spreadsheets      创建电子表格（默认建在用户云空间根目录）
+ *   2. GET  /open-apis/sheets/v3/.../sheets/query   查询第一张 sheet 的 sheet_id
+ *   3. PUT  /open-apis/sheets/v2/.../values          写入全部数据
+ * 返回: { url, spreadsheetToken }
+ */
+app.post('/api/feishu/sheets/create', async (req, res) => {
+  try {
+    const { access_token, title, rows } = req.body || {};
+    if (!access_token) return res.status(401).json({ error: 'missing access_token' });
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return res.status(400).json({ error: 'rows 为空' });
+    }
+
+    const authH = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${access_token}`
+    };
+
+    // 1. 创建电子表格（不传 folder_token 时创建在用户云空间根目录）
+    const createResp = await feishuFetch('/open-apis/sheets/v3/spreadsheets', {
+      method: 'POST',
+      headers: authH,
+      body: JSON.stringify({ title: title || `GSB评估导出_${Date.now()}` })
+    });
+    if (createResp.data.code !== 0 || !createResp.data.data || !createResp.data.data.spreadsheet) {
+      return res.status(400).json({ error: '创建电子表格失败', detail: createResp.data });
+    }
+    const ss = createResp.data.data.spreadsheet;
+    const spreadsheetToken = ss.spreadsheet_token;
+    const ssUrl = ss.url || `${FEISHU_HOST}/sheets/${spreadsheetToken}`;
+
+    // 2. 查询第一张 sheet 的 sheet_id
+    const meta = await feishuFetch(
+      `/open-apis/sheets/v3/spreadsheets/${spreadsheetToken}/sheets/query`,
+      { headers: { 'Authorization': `Bearer ${access_token}` } }
+    );
+    let firstSheetId = '';
+    if (meta.data.code === 0 && meta.data.data && meta.data.data.sheets && meta.data.data.sheets.length) {
+      firstSheetId = meta.data.data.sheets[0].sheet_id;
+    } else {
+      return res.status(400).json({ error: '读取新表 sheet 元信息失败', detail: meta.data, url: ssUrl, spreadsheetToken });
+    }
+
+    // 3. 写入数据（v2 values PUT）：range = sheetId!A1:{maxCol}{rowCount}
+    const colLetter = (n) => {
+      let s = '';
+      while (n > 0) {
+        const r = (n - 1) % 26;
+        s = String.fromCharCode(65 + r) + s;
+        n = Math.floor((n - 1) / 26);
+      }
+      return s;
+    };
+    const maxCols = rows.reduce((m, r) => Math.max(m, Array.isArray(r) ? r.length : 0), 1);
+    const range = `${firstSheetId}!A1:${colLetter(maxCols)}${rows.length}`;
+    // 单元格值：飞书 v2 接受 string / number / null，做一次兜底转换
+    const safeRows = rows.map(r => (Array.isArray(r) ? r : [r]).map(c => (c == null ? '' : c)));
+
+    const writeResp = await feishuFetch(
+      `/open-apis/sheets/v2/spreadsheets/${spreadsheetToken}/values`,
+      {
+        method: 'PUT',
+        headers: authH,
+        body: JSON.stringify({ valueRange: { range, values: safeRows } })
+      }
+    );
+    if (writeResp.data.code !== 0) {
+      return res.status(400).json({ error: '写入表格数据失败', detail: writeResp.data, url: ssUrl, spreadsheetToken });
+    }
+
+    res.json({ url: ssUrl, spreadsheetToken });
+  } catch (err) {
+    console.error('/api/feishu/sheets/create', err);
+    res.status(500).json({ error: 'internal', message: err.message });
+  }
+});
+
+/**
  * 批量写入多维表格（Bitable）记录
  * body: { access_token, app_token_or_url, table_id, records: [{ fields: {...} }] }
  */

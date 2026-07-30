@@ -361,6 +361,7 @@
             <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
               <button class="button" id="exportResults">导出结果报告</button>
               <button class="button light" id="exportRaw">导出原始数据</button>
+              <button class="button" id="exportSheet" style="background:#2b6cb0">📊 导出到飞书表格</button>
               <button class="button" id="syncBitable" style="background:#155e45">☁️ 同步到飞书多维表格</button>
             </div>
           </section>
@@ -1189,27 +1190,49 @@
       showEval();
     });
 
+    // ---- 导出共享助手：原始数据二维数组 / CSV 序列化 / 下载 ----
+    // 「原始数据」导出用的二维数组（表头 + 每行），供 CSV 导出与飞书表格导出共用，保证列一致
+    function buildRawExportRows(task){
+      const rows = [['题号', '问题', '回答A', '回答B', '文风表达', '组织逻辑', '总体', '理由数', '耗时(秒)']];
+      (task.questions || []).forEach((q, i) => {
+        const scores = (q.evaluation && q.evaluation.scores) || {};
+        rows.push([
+          i + 1, q.query || '',
+          isImageContent(q.answerA) ? '[图片]' : (q.answerA || '').substring(0, 100),
+          isImageContent(q.answerB) ? '[图片]' : (q.answerB || '').substring(0, 100),
+          scores.W || '', scores.O || '',
+          (q.evaluation && q.evaluation.overall) || '',
+          (q.evaluation && q.evaluation.reasons) ? q.evaluation.reasons.length : 0,
+          (q.evaluation && q.evaluation.timeSpent) || 0
+        ]);
+      });
+      return rows;
+    }
+
+    // 通用 CSV 序列化：UTF-8 BOM 头 + 逗号分隔 + 双引号转义
+    function toCSV(rows){
+      return '\ufeff' + rows.map(r => (Array.isArray(r) ? r : [])
+        .map(c => `"${String(c == null ? '' : c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    }
+
+    function downloadCSV(csv, filename){
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
     document.querySelector('#exportResults').addEventListener('click', () => {
       const task = getTask(currentTaskId);
       if(!task) return;
       const isASide = v => v === 'A更优' || v === 'A略优';
       const isBSide = v => v === 'B更优' || v === 'B略优';
       const isTie   = v => v === '持平';
-      const report = {
-        taskId: task.id,
-        taskName: task.name,
-        exportTime: new Date().toISOString(),
-        scoringLevels: ['A更优','A略优','持平','B略优','B更优'],
-        summary: {
-          totalQuestions: task.questions.length,
-          completedQuestions: task.questions.filter(isQuestionDone).length,
-          dimensionStats: {},
-          overallDistribution: { 'A更优':0,'A略优':0,'持平':0,'B略优':0,'B更优':0 },
-          overallWinner: ''
-        },
-        questions: []
-      };
       const dimWins = { W: { A: 0, B: 0, tie: 0 }, O: { A: 0, B: 0, tie: 0 } };
+      const dist = { 'A更优': 0, 'A略优': 0, '持平': 0, 'B略优': 0, 'B更优': 0 };
       let aWins = 0, bWins = 0, ties = 0;
       (task.questions || []).forEach(q => {
         if(q.evaluation && q.evaluation.scores){
@@ -1221,59 +1244,54 @@
             }
           });
           const ov = q.evaluation.overall;
-          if(ov && report.summary.overallDistribution[ov] !== undefined) report.summary.overallDistribution[ov]++;
+          if(ov && dist[ov] !== undefined) dist[ov]++;
           if(isASide(ov)) aWins++;
           else if(isBSide(ov)) bWins++;
           else if(isTie(ov)) ties++;
         }
-        report.questions.push({
-          query: q.query,
-          answerA: q.answerA,
-          answerB: q.answerB,
-          scores: q.evaluation ? q.evaluation.scores : {},
-          overall: q.evaluation ? q.evaluation.overall : '',
-          reasons: q.evaluation ? q.evaluation.reasons : [],
-          timeSpent: q.evaluation ? q.evaluation.timeSpent : 0
-        });
       });
-      report.summary.dimensionStats = dimWins;
-      report.summary.overallWinner = aWins > bWins && aWins > ties ? 'A' : (bWins > aWins && bWins > ties ? 'B' : '持平');
+      const winner = aWins > bWins && aWins > ties ? '回答A整体更优'
+        : (bWins > aWins && bWins > ties ? '回答B整体更优' : '双方持平 / 无明显差异');
+      const completed = (task.questions || []).filter(isQuestionDone).length;
 
-      const blob = new Blob([JSON.stringify(report, null, 2)], {type: 'application/json'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `GSB_Report_${task.id}_${Date.now()}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast('结果报告已导出');
+      const rows = [];
+      rows.push(['GSB 评估结果报告']);
+      rows.push(['任务ID', task.id]);
+      rows.push(['任务名称', task.name]);
+      rows.push(['导出时间', new Date().toLocaleString('zh-CN')]);
+      rows.push(['总题目数', (task.questions || []).length]);
+      rows.push(['已完成题目', completed]);
+      rows.push(['整体结论', winner]);
+      rows.push([]);
+      rows.push(['维度统计', 'A 更优', 'B 更优', '持平']);
+      rows.push(['文风表达', dimWins.W.A, dimWins.W.B, dimWins.W.tie]);
+      rows.push(['组织逻辑', dimWins.O.A, dimWins.O.B, dimWins.O.tie]);
+      rows.push([]);
+      rows.push(['整体评分分布', 'A更优', 'A略优', '持平', 'B略优', 'B更优']);
+      rows.push(['题目数', dist['A更优'], dist['A略优'], dist['持平'], dist['B略优'], dist['B更优']]);
+      rows.push([]);
+      rows.push(['题号', '问题', '文风表达', '组织逻辑', '总体', '评价理由']);
+      (task.questions || []).forEach((q, i) => {
+        const scores = (q.evaluation && q.evaluation.scores) || {};
+        const reasons = (q.evaluation && q.evaluation.reasons) || [];
+        const reasonText = reasons.map(r => `[${r.polarity === 'negative' ? '−' : '＋'}${r.dimension || ''}] ${r.text || ''}`).join(' ｜ ');
+        rows.push([
+          i + 1, q.query || '',
+          scores.W || '', scores.O || '',
+          (q.evaluation && q.evaluation.overall) || '',
+          reasonText
+        ]);
+      });
+
+      downloadCSV(toCSV(rows), `GSB_Report_${task.id}_${Date.now()}.csv`);
+      showToast('结果报告已导出（CSV）');
     });
 
     document.querySelector('#exportRaw').addEventListener('click', () => {
       const task = getTask(currentTaskId);
       if(!task) return;
-      const rows = [['题号', '问题', '回答A', '回答B', '文风表达', '组织逻辑', '总体', '理由数', '耗时(秒)']];
-      (task.questions || []).forEach((q, i) => {
-        const scores = (q.evaluation && q.evaluation.scores) || {};
-        rows.push([
-          i+1, q.query,
-          isImageContent(q.answerA) ? '[图片]' : (q.answerA || '').substring(0, 100),
-          isImageContent(q.answerB) ? '[图片]' : (q.answerB || '').substring(0, 100),
-          scores.W || '', scores.O || '',
-          (q.evaluation && q.evaluation.overall) || '',
-          (q.evaluation && q.evaluation.reasons) ? q.evaluation.reasons.length : 0,
-          (q.evaluation && q.evaluation.timeSpent) || 0
-        ]);
-      });
-      const csv = '\ufeff' + rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-      const blob = new Blob([csv], {type: 'text/csv'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `GSB_Export_${task.id}_${Date.now()}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast('原始数据已导出');
+      downloadCSV(toCSV(buildRawExportRows(task)), `GSB_Export_${task.id}_${Date.now()}.csv`);
+      showToast('原始数据已导出（CSV）');
     });
 
     // 评估页：一键导出评估数据（JSON + CSV，附完成状态）
@@ -1799,6 +1817,7 @@
             showToast('飞书授权成功，请重新填写表格链接并点击「从飞书拉取」');
           }
           else if(pending === 'export') document.querySelector('#syncBitable').click();
+          else if(pending === 'exportSheet') document.querySelector('#exportSheet').click();
         }, 500);
       }
     })();
@@ -1930,7 +1949,40 @@
       }
     });
 
-    /* -------- 启动 -------- */
+    /* -------- 导出到飞书电子表格（新建 Spreadsheet 并写入全部数据） -------- */
+    document.querySelector('#exportSheet').addEventListener('click', async () => {
+      const token = getFsToken();
+      if(!token){ requireFsToken('exportSheet'); return; }
+      const task = getTask(currentTaskId);
+      if(!task){ showToast('未选择任务'); return; }
+
+      const rows = buildRawExportRows(task);
+      if(rows.length <= 1){ showToast('没有可导出的题目'); return; }
+
+      const btn = document.querySelector('#exportSheet');
+      const original = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = '⏳ 导出中...';
+      try {
+        const resp = await apiPost('/api/feishu/sheets/create', {
+          access_token: token,
+          title: `GSB评估_${task.name}_${new Date().toISOString().slice(0, 10)}`,
+          rows
+        });
+        if(resp && resp.url){
+          showToast('已导出到飞书表格，正在打开…');
+          window.open(resp.url, '_blank');
+        } else {
+          showToast('导出成功，但未返回表格链接');
+        }
+      } catch(err){
+        showToast('导出失败：' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = original;
+      }
+    });
+
     (function bootstrap(){
       const session = getSession();
       if(session && session.email && session.role){
