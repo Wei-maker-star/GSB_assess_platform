@@ -1750,7 +1750,7 @@
     const FS_OAUTH_URL = 'https://open.feishu.cn/open-apis/authen/v1/authorize'
       + '?app_id=cli_aae3d417d878dbd8'
       + '&redirect_uri=' + encodeURIComponent(location.origin + '/api/feishu/callback')
-      + '&scope=bitable:app:readonly%20bitable:app%20sheets:spreadsheet:read%20sheets:spreadsheet:write_only%20sheets:spreadsheet:meta:read%20sheets:spreadsheet:meta:write_only%20contact:user.base:readonly'
+      + '&scope=base:app:read%20base:app:update%20base:app:create%20base:app:copy%20sheets:spreadsheet:read%20sheets:spreadsheet:write_only%20sheets:spreadsheet:create%20sheets:spreadsheet.meta:read%20sheets:spreadsheet.meta:write_only%20contact:user.base:readonly'
       + '&response_type=code';
 
     function getFsToken(){
