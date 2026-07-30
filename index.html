@@ -1821,7 +1821,11 @@
         });
         const values = resp.values || [];
         if(values.length === 0){ showToast('未读取到数据'); return; }
-        const tsv = values.map(row => row.map(cell => {
+
+        // 单元格解析：把飞书返回的 string/number/Array/Object 统一转成纯文本。
+        // 直接对二维数组按行列映射，不再拼接 TSV / 走 parsePastedTable，
+        // 因此单元格内的换行符可安全保留（与 Excel 上传路径一致），不会造成错误拆行。
+        const parseCell = (cell) => {
           if(cell == null) return '';
           if(typeof cell === 'string' || typeof cell === 'number') return String(cell);
           if(Array.isArray(cell)){
@@ -1834,9 +1838,16 @@
             return JSON.stringify(cell);
           }
           return String(cell);
-        }).join('\t')).join('\n');
+        };
 
-        const data = parsePastedTable(tsv);
+        // 首行作表头，其余行按列映射成对象数组。
+        const headers = (values[0] || []).map((h, i) => (parseCell(h).replace(/\s+/g, ' ').trim()) || `列${i + 1}`);
+        const data = values.slice(1).map(row => {
+          const obj = {};
+          headers.forEach((h, i) => { obj[h] = parseCell(row[i]); });
+          return obj;
+        }).filter(obj => Object.values(obj).some(v => String(v).trim()));
+
         if(data.length === 0){ showToast('未解析到有效表格数据（至少需要表头 + 1 行数据）'); return; }
         excelData = data;
         importSourceType = 'feishu';
