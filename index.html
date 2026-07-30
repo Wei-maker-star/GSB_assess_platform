@@ -359,10 +359,7 @@
             <p id="resultProgress">完成题目：–</p>
             <p id="resultReasonCount">有效评价理由：–</p>
             <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
-              <button class="button" id="exportResults">导出结果报告</button>
-              <button class="button light" id="exportRaw">导出原始数据</button>
               <button class="button" id="exportSheet" style="background:#2b6cb0">📊 导出到飞书表格</button>
-              <button class="button" id="syncBitable" style="background:#155e45">☁️ 同步到飞书多维表格</button>
             </div>
           </section>
         </div>
@@ -1190,10 +1187,21 @@
       showEval();
     });
 
-    // ---- 导出共享助手：原始数据二维数组 / CSV 序列化 / 下载 ----
-    // 「原始数据」导出用的二维数组（表头 + 每行），供 CSV 导出与飞书表格导出共用，保证列一致
+    // ---- 导出共享助手：原始数据二维数组（供飞书表格导出使用）----
+    // 把一道题的全部评价理由合并到同一个单元格，理由之间用「；」分隔（不换行），含维度与倾向标记
+    function formatReasonsFull(q){
+      const reasons = (q.evaluation && q.evaluation.reasons) || [];
+      const dimName = { W: '文风表达', O: '组织逻辑' };
+      return reasons.map((r, idx) => {
+        const sign = r.polarity === 'negative' ? '−' : '＋';
+        const dim = dimName[r.dimension] || r.dimension || '整体';
+        return `${idx + 1}. [${sign}${dim}] ${r.text || ''}`;
+      }).join('；');
+    }
+
+    // 「原始数据」导出用的二维数组（表头 + 每行），飞书表格导出复用
     function buildRawExportRows(task){
-      const rows = [['题号', '问题', '回答A', '回答B', '文风表达', '组织逻辑', '总体', '理由数', '耗时(秒)']];
+      const rows = [['题号', '问题', '回答A', '回答B', '文风表达', '组织逻辑', '总体', '评价理由', '耗时(秒)']];
       (task.questions || []).forEach((q, i) => {
         const scores = (q.evaluation && q.evaluation.scores) || {};
         rows.push([
@@ -1202,97 +1210,12 @@
           isImageContent(q.answerB) ? '[图片]' : (q.answerB || '').substring(0, 100),
           scores.W || '', scores.O || '',
           (q.evaluation && q.evaluation.overall) || '',
-          (q.evaluation && q.evaluation.reasons) ? q.evaluation.reasons.length : 0,
+          formatReasonsFull(q),
           (q.evaluation && q.evaluation.timeSpent) || 0
         ]);
       });
       return rows;
     }
-
-    // 通用 CSV 序列化：UTF-8 BOM 头 + 逗号分隔 + 双引号转义
-    function toCSV(rows){
-      return '\ufeff' + rows.map(r => (Array.isArray(r) ? r : [])
-        .map(c => `"${String(c == null ? '' : c).replace(/"/g, '""')}"`).join(',')).join('\n');
-    }
-
-    function downloadCSV(csv, filename){
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    document.querySelector('#exportResults').addEventListener('click', () => {
-      const task = getTask(currentTaskId);
-      if(!task) return;
-      const isASide = v => v === 'A更优' || v === 'A略优';
-      const isBSide = v => v === 'B更优' || v === 'B略优';
-      const isTie   = v => v === '持平';
-      const dimWins = { W: { A: 0, B: 0, tie: 0 }, O: { A: 0, B: 0, tie: 0 } };
-      const dist = { 'A更优': 0, 'A略优': 0, '持平': 0, 'B略优': 0, 'B更优': 0 };
-      let aWins = 0, bWins = 0, ties = 0;
-      (task.questions || []).forEach(q => {
-        if(q.evaluation && q.evaluation.scores){
-          Object.entries(q.evaluation.scores).forEach(([dim, val]) => {
-            if(dimWins[dim]){
-              if(isASide(val)) dimWins[dim].A++;
-              else if(isBSide(val)) dimWins[dim].B++;
-              else if(isTie(val)) dimWins[dim].tie++;
-            }
-          });
-          const ov = q.evaluation.overall;
-          if(ov && dist[ov] !== undefined) dist[ov]++;
-          if(isASide(ov)) aWins++;
-          else if(isBSide(ov)) bWins++;
-          else if(isTie(ov)) ties++;
-        }
-      });
-      const winner = aWins > bWins && aWins > ties ? '回答A整体更优'
-        : (bWins > aWins && bWins > ties ? '回答B整体更优' : '双方持平 / 无明显差异');
-      const completed = (task.questions || []).filter(isQuestionDone).length;
-
-      const rows = [];
-      rows.push(['GSB 评估结果报告']);
-      rows.push(['任务ID', task.id]);
-      rows.push(['任务名称', task.name]);
-      rows.push(['导出时间', new Date().toLocaleString('zh-CN')]);
-      rows.push(['总题目数', (task.questions || []).length]);
-      rows.push(['已完成题目', completed]);
-      rows.push(['整体结论', winner]);
-      rows.push([]);
-      rows.push(['维度统计', 'A 更优', 'B 更优', '持平']);
-      rows.push(['文风表达', dimWins.W.A, dimWins.W.B, dimWins.W.tie]);
-      rows.push(['组织逻辑', dimWins.O.A, dimWins.O.B, dimWins.O.tie]);
-      rows.push([]);
-      rows.push(['整体评分分布', 'A更优', 'A略优', '持平', 'B略优', 'B更优']);
-      rows.push(['题目数', dist['A更优'], dist['A略优'], dist['持平'], dist['B略优'], dist['B更优']]);
-      rows.push([]);
-      rows.push(['题号', '问题', '文风表达', '组织逻辑', '总体', '评价理由']);
-      (task.questions || []).forEach((q, i) => {
-        const scores = (q.evaluation && q.evaluation.scores) || {};
-        const reasons = (q.evaluation && q.evaluation.reasons) || [];
-        const reasonText = reasons.map(r => `[${r.polarity === 'negative' ? '−' : '＋'}${r.dimension || ''}] ${r.text || ''}`).join(' ｜ ');
-        rows.push([
-          i + 1, q.query || '',
-          scores.W || '', scores.O || '',
-          (q.evaluation && q.evaluation.overall) || '',
-          reasonText
-        ]);
-      });
-
-      downloadCSV(toCSV(rows), `GSB_Report_${task.id}_${Date.now()}.csv`);
-      showToast('结果报告已导出（CSV）');
-    });
-
-    document.querySelector('#exportRaw').addEventListener('click', () => {
-      const task = getTask(currentTaskId);
-      if(!task) return;
-      downloadCSV(toCSV(buildRawExportRows(task)), `GSB_Export_${task.id}_${Date.now()}.csv`);
-      showToast('原始数据已导出（CSV）');
-    });
 
     // 评估页：一键导出评估数据（JSON + CSV，附完成状态）
     document.querySelector('#exportEvalData').addEventListener('click', () => {
@@ -1816,7 +1739,6 @@
             switchCreateSource('feishu');
             showToast('飞书授权成功，请重新填写表格链接并点击「从飞书拉取」');
           }
-          else if(pending === 'export') document.querySelector('#syncBitable').click();
           else if(pending === 'exportSheet') document.querySelector('#exportSheet').click();
         }, 500);
       }
@@ -1881,71 +1803,6 @@
       } finally {
         btn.disabled = false;
         btn.textContent = originalText;
-      }
-    });
-
-    /* -------- 飞书 Bitable 同步导出 -------- */
-    document.querySelector('#syncBitable').addEventListener('click', async () => {
-      const token = getFsToken();
-      if(!token){ requireFsToken('export'); return; }
-      const task = getTask(currentTaskId);
-      if(!task){ showToast('未选择任务'); return; }
-
-      const savedApp = localStorage.getItem('fsBitableApp') || '';
-      const savedTable = localStorage.getItem('fsBitableTable') || '';
-      const appUrl = prompt('请输入飞书多维表格 URL 或 app_token：', savedApp);
-      if(!appUrl) return;
-      const tableId = prompt('请输入 table_id（多维表格 > 复制表 ID）：', savedTable);
-      if(!tableId) return;
-      localStorage.setItem('fsBitableApp', appUrl);
-      localStorage.setItem('fsBitableTable', tableId);
-
-      const session = getSession();
-      const rows = [];
-      (task.questions || []).forEach((q, i) => {
-        if(!isQuestionDone(q)) return;
-        const scores = (q.evaluation && q.evaluation.scores) || {};
-        const reasons = (q.evaluation && q.evaluation.reasons) || [];
-        const reasonText = reasons.map(r =>
-          `[${r.polarity === 'negative' ? '−' : '＋'}${r.dimension}] ${r.text}`
-        ).join(' ｜ ');
-        rows.push({
-          fields: {
-            '任务ID': task.id,
-            '任务名称': task.name,
-            '题号': i + 1,
-            'query': String(q.query || '').slice(0, 5000),
-            '回答A': isImageContent(q.answerA) ? q.answerA : String(q.answerA || '').slice(0, 8000),
-            '回答B': isImageContent(q.answerB) ? q.answerB : String(q.answerB || '').slice(0, 8000),
-            '文风表达分': scores.W || '',
-            '组织逻辑分': scores.O || '',
-            '整体GSB分': q.evaluation.overall || '',
-            '评价理由': reasonText,
-            '评分人': (session && session.email) || '',
-            '评分角色': (session && session.role) || '',
-            '评分时间': new Date().toISOString()
-          }
-        });
-      });
-      if(rows.length === 0){ showToast('没有已完成的题目可同步'); return; }
-
-      const btn = document.querySelector('#syncBitable');
-      const original = btn.textContent;
-      btn.disabled = true;
-      btn.textContent = '⏳ 同步中...';
-      try {
-        const resp = await apiPost('/api/feishu/bitable/append', {
-          access_token: token,
-          app_token_or_url: appUrl,
-          table_id: tableId,
-          records: rows
-        });
-        showToast(`已写入 ${resp.inserted} 条记录到多维表格`);
-      } catch(err){
-        showToast('同步失败：' + err.message);
-      } finally {
-        btn.disabled = false;
-        btn.textContent = original;
       }
     });
 
