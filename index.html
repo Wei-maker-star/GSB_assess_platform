@@ -123,6 +123,19 @@
     .fs-import-block input{width:100%;border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:12px;font-family:"DM Mono",monospace;box-sizing:border-box}
     .fs-import-block .fs-btn-inline{margin-top:10px;background:var(--moss);color:#fff;border:0;padding:8px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer}
     .fs-import-block .fs-btn-inline:disabled{opacity:.6;cursor:wait}
+    /* ---- 评估页：题目上下文（用户画像 / 任务说明）+ 手机导航 ---- */
+    .eval-context{display:flex;flex-direction:column;gap:10px;margin-bottom:15px}
+    .ctx-item{border:1px solid var(--line);border-radius:10px;padding:11px 13px;background:#fbfcf8}
+    .ctx-item .ctx-label{display:block;font:600 10px "DM Mono",monospace;letter-spacing:.06em;color:var(--moss);margin-bottom:6px}
+    .ctx-item .ctx-body{font-size:12.5px;line-height:1.6;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+    #ctxTaskNote{background:#f4faf1;border-color:#d6e6d8}
+    .phone-nav{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:16px}
+    .phone-nav .pn-btn{border:1px solid var(--line);background:var(--white);color:var(--ink);border-radius:8px;padding:9px 16px;font-weight:700;font-size:13px;transition:.15s}
+    .phone-nav .pn-btn:hover:not(:disabled){border-color:#9fbea9;background:#eef7ed;color:var(--moss)}
+    .phone-nav .pn-btn:disabled{opacity:.4;cursor:not-allowed}
+    .phone-nav .pn-label{font:600 14px "DM Mono",monospace;color:var(--muted);min-width:72px;text-align:center}
+    .dialog-head-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .dialog-head-row h2{margin:0}
   </style>
 </head>
 <body>
@@ -182,8 +195,7 @@
         <div class="page-head">
           <div><h1>评估任务</h1><p class="sub">围绕真实用户场景，校准回答质量。</p></div>
           <div style="display:flex;gap:10px">
-            <button class="button light" id="importExcel">📥 导入表格</button>
-            <button class="button" id="openCreate">＋ 新建评估任务</button>
+            <button class="button" id="openCreate">＋ 创建任务</button>
           </div>
         </div>
         <div class="tabs">
@@ -221,6 +233,16 @@
 
           <div class="compare">
             <div class="compare-top"><h2>请比较两份回答</h2><span class="counter" id="evalCounter">00 / 00</span></div>
+            <div class="eval-context" id="evalContext" style="display:none">
+              <div class="ctx-item" id="ctxProfile" style="display:none">
+                <span class="ctx-label">👤 用户画像信息</span>
+                <div class="ctx-body" id="ctxProfileBody"></div>
+              </div>
+              <div class="ctx-item" id="ctxTaskNote" style="display:none">
+                <span class="ctx-label">📋 任务说明</span>
+                <div class="ctx-body" id="ctxTaskNoteBody"></div>
+              </div>
+            </div>
             <div class="phones">
               <div class="phone-wrap">
                 <div class="answer-label">回答 A <span>候选答案</span></div>
@@ -252,6 +274,11 @@
                   <div class="answer" id="answerB"></div>
                 </article>
               </div>
+            </div>
+            <div class="phone-nav">
+              <button class="pn-btn" id="prevQuestion">← 上一题</button>
+              <span class="pn-label" id="phoneNavLabel">00 / 00</span>
+              <button class="pn-btn" id="nextQuestion">下一题 →</button>
             </div>
           </div>
 
@@ -348,25 +375,17 @@
 
   <div class="create-sheet" id="createSheet">
     <div class="dialog">
-      <h2>新建评估任务</h2>
-      <p>创建后可由产品、CQC 和管理者共同查看与评估。</p>
-      <div class="field"><label>任务名称</label><input id="newTaskName" placeholder="例如：旅行规划助手 · 长链路任务"></div>
-      <div class="field"><label>评估标准</label><input id="newTaskDesc" value="文风表达、组织逻辑"></div>
-      <div class="dialog-actions">
-        <button class="button light" id="closeCreate">取消</button>
-        <button class="button" id="createTask">创建任务</button>
+      <div class="dialog-head-row">
+        <h2>创建任务</h2>
+        <button type="button" class="button light" id="downloadTemplate" style="padding:8px 12px">⬇ 下载模板</button>
       </div>
-    </div>
-  </div>
+      <p>上传 Excel 文件，或填写飞书表格分享链接，快速创建评估任务。</p>
 
-  <div class="create-sheet" id="importSheet">
-    <div class="dialog">
-      <h2>导入评估数据</h2>
-      <p>支持 Excel 文件导入或飞书表格内容粘贴。</p>
-      
+      <div class="field"><label>任务名称</label><input id="createTaskName" placeholder="例如：旅行规划助手 · 长链路任务"></div>
+
       <div class="import-tabs">
-        <button type="button" class="import-tab active" data-import-type="excel">Excel 文件</button>
-        <button type="button" class="import-tab" data-import-type="feishu">飞书表格/多维表格</button>
+        <button type="button" class="import-tab active" data-source="excel">📄 上传 Excel</button>
+        <button type="button" class="import-tab" data-source="feishu">🔗 飞书表格链接</button>
       </div>
 
       <div class="import-pane active" id="excelPane">
@@ -374,47 +393,28 @@
           <div class="upload-icon">📊</div>
           <strong>点击选择文件</strong>
           <p>或将文件拖拽到此处</p>
-          <p style="font-size:11px;color:#999">支持 .xlsx, .xls 格式</p>
-          <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none">
+          <p style="font-size:11px;color:#999">支持 .xlsx, .xls, .csv 格式</p>
+          <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none">
         </div>
       </div>
 
       <div class="import-pane" id="feishuPane">
-        <div class="field">
-          <label>从飞书表格复制并粘贴</label>
-          <textarea id="pasteInput" class="paste-box" placeholder="点击飞书表格左上角全选，复制(Ctrl+C)后在此处粘贴(Ctrl+V)"></textarea>
-          <div class="feishu-help">
-            💡 <strong>提示：</strong> 飞书表格复制后默认为 TSV (Tab 分隔) 格式，粘贴后我们将自动解析列。
-          </div>
-        </div>
-        
-        <div class="advanced-box">
-          <button type="button" class="advanced-toggle" id="toggleAdvanced">＋ 高级选项：粘贴解析（不需要 API 权限）</button>
-          <div class="advanced-content" id="advancedContent" hidden>
-            <p style="font-size:11px;color:var(--muted)">粘贴模式仅支持文本内容，图片、富文本会丢失。若需要图片，请优先使用上方的 URL 一键导入。</p>
-          </div>
-        </div>
-
         <div class="fs-import-block">
           <label style="display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px">飞书表格分享链接（需要登录飞书账号）</label>
           <input id="feishuUrl" placeholder="https://xxx.feishu.cn/sheets/shtxxxxxx">
           <button type="button" class="fs-btn-inline" id="fetchFeishu">🔗 从飞书拉取（读取第一张 Sheet）</button>
-          <p style="font-size:11px;color:var(--muted);margin:8px 0 0">通过后端代理调用飞书 Sheets API，自动读取表格全部数据（含图片链接）。</p>
-        </div>
-
-        <div class="inline-actions">
-          <button type="button" class="button" id="parsePaste">预览并映射列</button>
+          <p style="font-size:11px;color:var(--muted);margin:8px 0 0">通过后端代理调用飞书 Sheets API，需先完成飞书 OAuth 授权，自动读取表格全部数据（含图片链接）。</p>
         </div>
       </div>
 
       <div id="importConfig" style="display:none">
-        <div class="field"><label>任务名称</label><input id="importTaskName" placeholder="为这批数据命名任务"></div>
         <div class="excel-preview" id="excelPreview"></div>
         <div class="col-mapping" id="colMapping"></div>
-        <div class="dialog-actions">
-          <button type="button" class="button light" id="cancelImport">取消</button>
-          <button type="button" class="button" id="confirmImport">确认导入</button>
-        </div>
+      </div>
+
+      <div class="dialog-actions">
+        <button type="button" class="button light" id="closeCreate">取消</button>
+        <button type="button" class="button" id="createTask">创建任务</button>
       </div>
     </div>
   </div>
@@ -482,7 +482,7 @@
       document.querySelector('#countDone').textContent = tasks.filter(t => calcTaskStatus(t) === 'done').length;
 
       if(filtered.length === 0){
-        table.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><h3>${currentTab === 'all' ? '暂无评估任务' : '当前分类下无任务'}</h3><p>${currentTab === 'all' ? '点击右上角「导入表格」或「新建评估任务」开始' : ''}</p></div>`;
+        table.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><h3>${currentTab === 'all' ? '暂无评估任务' : '当前分类下无任务'}</h3><p>${currentTab === 'all' ? '点击右上角「＋ 创建任务」开始' : ''}</p></div>`;
         return;
       }
 
@@ -773,13 +773,47 @@
       renderAnswerContent(document.querySelector('#answerA'), q.answerA, '回答A');
       renderAnswerContent(document.querySelector('#answerB'), q.answerB, '回答B');
 
-      if(q.userProfile){
+      // 用户画像信息（提取文本，兼容 tags/note 结构）
+      const profileText = q.userProfile
+        ? (q.userProfile.note || (q.userProfile.tags || []).join('、') || '')
+        : '';
+
+      // 左侧面板用户画像（保持原联动）
+      if(q.userProfile && (profileText || (q.userProfile.tags || []).length)){
         document.querySelector('#profileSection').style.display = '';
         document.querySelector('#profileTags').innerHTML = (q.userProfile.tags || []).map(t => `<span class="tag">${t}</span>`).join('');
         document.querySelector('#profileNote').textContent = q.userProfile.note || '';
       } else {
         document.querySelector('#profileSection').style.display = 'none';
       }
+
+      // 手机预览上方：用户画像信息 + 任务说明
+      const ctxProfile = document.querySelector('#ctxProfile');
+      const ctxTaskNote = document.querySelector('#ctxTaskNote');
+      let hasCtx = false;
+      if(profileText){
+        ctxProfile.style.display = '';
+        document.querySelector('#ctxProfileBody').textContent = profileText;
+        hasCtx = true;
+      } else {
+        ctxProfile.style.display = 'none';
+      }
+      if(q.taskNote && String(q.taskNote).trim()){
+        ctxTaskNote.style.display = '';
+        document.querySelector('#ctxTaskNoteBody').textContent = q.taskNote;
+        hasCtx = true;
+      } else {
+        ctxTaskNote.style.display = 'none';
+      }
+      document.querySelector('#evalContext').style.display = hasCtx ? '' : 'none';
+
+      // 手机预览下方：题目切换导航
+      const navLabel = document.querySelector('#phoneNavLabel');
+      if(navLabel) navLabel.textContent = `${String(currentQuestionIndex+1).padStart(2,'0')} / ${String(total).padStart(2,'0')}`;
+      const prevBtn = document.querySelector('#prevQuestion');
+      const nextBtn = document.querySelector('#nextQuestion');
+      if(prevBtn) prevBtn.disabled = currentQuestionIndex <= 0;
+      if(nextBtn) nextBtn.disabled = currentQuestionIndex >= total - 1;
 
       initGsbChoices(q);
       renderReasons(q);
@@ -926,6 +960,19 @@
     }
 
     document.querySelector('#backTasks').addEventListener('click', showTasks);
+
+    // 手机预览下方：题目切换导航（与左侧题目列表联动）
+    function gotoQuestion(idx){
+      const task = getTask(currentTaskId);
+      if(!task || !task.questions) return;
+      if(idx < 0 || idx >= task.questions.length) return;
+      currentQuestionIndex = idx;
+      renderQuestionsList();
+      renderQuestion();
+    }
+    document.querySelector('#prevQuestion').addEventListener('click', () => gotoQuestion(currentQuestionIndex - 1));
+    document.querySelector('#nextQuestion').addEventListener('click', () => gotoQuestion(currentQuestionIndex + 1));
+
     document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('click', () => {
       if(btn.dataset.page === 'tasks') showTasks();
       else if(currentTaskId) showEval();
@@ -1307,80 +1354,66 @@
     });
 
     const createSheet = document.querySelector('#createSheet');
-    document.querySelector('#openCreate').onclick = () => createSheet.classList.add('open');
-    document.querySelector('#closeCreate').onclick = () => createSheet.classList.remove('open');
-    document.querySelector('#createTask').onclick = () => {
-      const name = document.querySelector('#newTaskName').value.trim();
-      const desc = document.querySelector('#newTaskDesc').value.trim();
-      if(!name){ showToast('请输入任务名称'); return; }
-      const newTask = {
-        id: 'GSB-' + String(Date.now()).slice(-4),
-        name, description: desc,
-        createdAt: new Date().toISOString(),
-        questions: []
-      };
-      saveTask(newTask);
-      createSheet.classList.remove('open');
-      document.querySelector('#newTaskName').value = '';
-      document.querySelector('#newTaskDesc').value = '';
-      renderTasks();
-      showToast('任务已创建，请导入或添加题目');
-    };
-
-    const importSheet = document.querySelector('#importSheet');
     const uploadZone = document.querySelector('#uploadZone');
     const fileInput = document.querySelector('#fileInput');
     const importConfig = document.querySelector('#importConfig');
     const excelPreview = document.querySelector('#excelPreview');
     const colMapping = document.querySelector('#colMapping');
-    const pasteInput = document.querySelector('#pasteInput');
-    const advancedContent = document.querySelector('#advancedContent');
 
-    function resetImportDialog(type = 'excel'){
-      importSourceType = type;
-      excelData = null;
-      importConfig.style.display = 'none';
-      uploadZone.style.display = '';
-      document.querySelector('#importTaskName').value = '';
-      document.querySelector('#fileInput').value = '';
-      if(pasteInput) pasteInput.value = '';
-      document.querySelectorAll('.import-tab').forEach(tab => tab.classList.toggle('active', tab.dataset.importType === type));
-      document.querySelectorAll('.import-pane').forEach(pane => pane.classList.remove('active'));
-      document.querySelector(type === 'excel' ? '#excelPane' : '#feishuPane').classList.add('active');
+    function switchCreateSource(source){
+      importSourceType = source;
+      document.querySelectorAll('#createSheet .import-tab').forEach(tab => tab.classList.toggle('active', tab.dataset.source === source));
+      document.querySelectorAll('#createSheet .import-pane').forEach(pane => pane.classList.remove('active'));
+      document.querySelector(source === 'feishu' ? '#feishuPane' : '#excelPane').classList.add('active');
     }
 
-    document.querySelector('#importExcel').onclick = () => {
-      importSheet.classList.add('open');
-      resetImportDialog('excel');
+    function resetCreateDialog(){
+      excelData = null;
+      importSourceType = 'excel';
+      importConfig.style.display = 'none';
+      uploadZone.style.display = '';
+      document.querySelector('#createTaskName').value = '';
+      fileInput.value = '';
+      const fu = document.querySelector('#feishuUrl');
+      if(fu) fu.value = '';
+      excelPreview.innerHTML = '';
+      colMapping.innerHTML = '';
+      switchCreateSource('excel');
+    }
+
+    document.querySelector('#openCreate').onclick = () => {
+      resetCreateDialog();
+      createSheet.classList.add('open');
       loadXLSXLibrary().catch(() => {});
     };
-    document.querySelector('#cancelImport').onclick = () => importSheet.classList.remove('open');
+    document.querySelector('#closeCreate').onclick = () => createSheet.classList.remove('open');
 
-    document.querySelectorAll('.import-tab').forEach(tab => tab.addEventListener('click', () => {
-      resetImportDialog(tab.dataset.importType);
-    }));
+    document.querySelectorAll('#createSheet .import-tab').forEach(tab => tab.addEventListener('click', () => switchCreateSource(tab.dataset.source)));
 
-    document.querySelector('#toggleAdvanced').addEventListener('click', () => {
-      advancedContent.hidden = !advancedContent.hidden;
-      document.querySelector('#toggleAdvanced').textContent = advancedContent.hidden ? '＋ 高级选项：粘贴解析（不需要 API 权限）' : '− 收起高级选项';
-    });
-
-    document.querySelector('#parsePaste').addEventListener('click', () => {
-      const text = pasteInput.value.trim();
-      const url = document.querySelector('#feishuUrl').value.trim();
-      if(!text){
-        showToast(url ? '当前页面仅支持粘贴解析；链接读取需要后端 API Token 配置' : '请先粘贴飞书表格内容');
+    // 纯前端生成并下载 Excel 模板
+    async function downloadTemplate(){
+      try {
+        await loadXLSXLibrary();
+      } catch(err) {
+        showToast(err.message || '模板组件加载失败');
         return;
       }
-      const data = parsePastedTable(text);
-      if(data.length === 0){ showToast('未解析到有效表格数据'); return; }
-      excelData = data;
-      importSourceType = 'feishu';
-      showExcelPreview(data);
-      showColMapping(data);
-      importConfig.style.display = '';
-      document.querySelector('#importTaskName').value = '飞书表格导入任务';
-    });
+      const headers = ['query（必填）', '回答A（必填）', '回答B（必填）', '用户画像信息（可选）', '任务说明（可选）'];
+      const example = [
+        '帮我规划一个三天两晚的杭州行程',
+        '回答A的完整内容……',
+        '回答B的完整内容……',
+        '28岁女性，第一次去杭州，偏好文艺与美食，预算中等',
+        '本任务评估两个回答在文风表达与组织逻辑上的优劣，请重点关注行程的可执行性。'
+      ];
+      const ws = XLSX.utils.aoa_to_sheet([headers, example]);
+      ws['!cols'] = headers.map(() => ({ wch: 28 }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'GSB评估模板');
+      XLSX.writeFile(wb, 'GSB评估任务模板.xlsx');
+      showToast('模板已下载');
+    }
+    document.querySelector('#downloadTemplate').onclick = downloadTemplate;
 
     uploadZone.addEventListener('click', () => fileInput.click());
     uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
@@ -1489,8 +1522,8 @@
         { key: 'query', label: '问题 (query)', required: true },
         { key: 'answerA', label: '回答 A', required: true },
         { key: 'answerB', label: '回答 B', required: true },
-        { key: 'tags', label: '用户标签（可选）', required: false },
-        { key: 'note', label: '用户备注（可选）', required: false }
+        { key: 'profile', label: '用户画像信息（可选）', required: false },
+        { key: 'taskNote', label: '任务说明（可选）', required: false }
       ];
       colMapping.innerHTML = fields.map(f => {
         const options = ['<option value="">-- 无 --</option>', ...headers.map(h =>
@@ -1513,20 +1546,23 @@
         } else if(lower.includes('回答b') || lower.includes('答案b') || lower.includes('answerb') || lower === 'b'){
           const sel = colMapping.querySelector(`[data-field="answerB"]`);
           if(sel) sel.value = h;
-        } else if(lower.includes('tag') || lower.includes('标签')){
-          const sel = colMapping.querySelector(`[data-field="tags"]`);
+        } else if(lower.includes('画像') || lower.includes('profile') || lower.includes('用户信息') || lower.includes('标签') || lower.includes('tag')){
+          const sel = colMapping.querySelector(`[data-field="profile"]`);
           if(sel) sel.value = h;
-        } else if(lower.includes('note') || lower.includes('备注') || lower.includes('画像')){
-          const sel = colMapping.querySelector(`[data-field="note"]`);
+        } else if(lower.includes('任务说明') || lower.includes('说明') || lower.includes('instruction') || lower.includes('备注') || lower.includes('note')){
+          const sel = colMapping.querySelector(`[data-field="taskNote"]`);
           if(sel) sel.value = h;
         }
       });
     }
 
-    function handleConfirmImport(){
+    function handleCreateTask(){
       try {
-        if(!excelData){ showToast('请先导入或粘贴表格数据'); return; }
-        const taskName = document.querySelector('#importTaskName').value.trim();
+        const taskName = document.querySelector('#createTaskName').value.trim();
+        if(!excelData || excelData.length === 0){
+          showToast('请先上传 Excel 文件或从飞书拉取数据');
+          return;
+        }
         if(!taskName){ showToast('请输入任务名称'); return; }
 
         const mappings = {};
@@ -1535,45 +1571,43 @@
         });
 
         if(!mappings.query || !mappings.answerA || !mappings.answerB){
-          showToast('请映射必填字段（问题、回答A、回答B）');
+          showToast('请映射必填字段（query、回答A、回答B）');
           return;
         }
 
         const questions = excelData.map(row => {
-          const tagsStr = mappings.tags ? String(row[mappings.tags] || '') : '';
-          const noteStr = mappings.note ? String(row[mappings.note] || '') : '';
+          const profileStr = mappings.profile ? String(row[mappings.profile] || '').trim() : '';
+          const taskNoteStr = mappings.taskNote ? String(row[mappings.taskNote] || '').trim() : '';
           return {
             query: String(row[mappings.query] || ''),
             answerA: String(row[mappings.answerA] || ''),
             answerB: String(row[mappings.answerB] || ''),
-            userProfile: {
-              tags: tagsStr ? tagsStr.split(/[,，、;；]/).map(t => t.trim()).filter(Boolean) : [],
-              note: noteStr
-            },
+            userProfile: profileStr ? { tags: [], note: profileStr } : null,
+            taskNote: taskNoteStr,
             evaluation: null
           };
         }).filter(q => q.query);
 
-        if(questions.length === 0){ showToast('没有有效题目'); return; }
+        if(questions.length === 0){ showToast('没有有效题目（query 不能为空）'); return; }
 
         const newTask = {
           id: 'GSB-' + String(Date.now()).slice(-4),
           name: taskName,
-          description: (importSourceType === 'feishu' ? '飞书表格导入 · ' : 'Excel 导入 · ') + questions.length + ' 题',
+          description: (importSourceType === 'feishu' ? '飞书导入 · ' : 'Excel 导入 · ') + questions.length + ' 题',
           createdAt: new Date().toISOString(),
           questions
         };
         saveTask(newTask);
-        importSheet.classList.remove('open');
+        createSheet.classList.remove('open');
         renderTasks();
-        showToast(`已导入 ${questions.length} 道题目`);
+        showToast(`任务已创建，共 ${questions.length} 道题目`);
       } catch(err) {
-        console.error('confirm import failed:', err);
-        showToast('导入失败：' + (err && err.message ? err.message : '未知错误'));
+        console.error('create task failed:', err);
+        showToast('创建失败：' + (err && err.message ? err.message : '未知错误'));
       }
     }
 
-    document.querySelector('#confirmImport').addEventListener('click', handleConfirmImport);
+    document.querySelector('#createTask').addEventListener('click', handleCreateTask);
 
     /* ========================================================================
        邮箱+密码 登录/注册 + 角色选择
@@ -1716,7 +1750,7 @@
     const FS_OAUTH_URL = 'https://open.feishu.cn/open-apis/authen/v1/authorize'
       + '?app_id=cli_aae3d417d878dbd8'
       + '&redirect_uri=' + encodeURIComponent(location.origin + '/api/feishu/callback')
-      + '&scope=bitable:app%20sheets:spreadsheet%20contact:user.base:readonly'
+      + '&scope=bitable:app:readonly%20bitable:app%20sheets:spreadsheet:read%20sheets:spreadsheet:write_only%20sheets:spreadsheet:meta:read%20sheets:spreadsheet:meta:write_only%20contact:user.base:readonly'
       + '&response_type=code';
 
     function getFsToken(){
@@ -1758,7 +1792,12 @@
         localStorage.removeItem(FS_PENDING_ACTION_KEY);
         // 延迟执行，等页面初始化完毕
         setTimeout(() => {
-          if(pending === 'import') document.querySelector('#fetchFeishu').click();
+          if(pending === 'import'){
+            resetCreateDialog();
+            createSheet.classList.add('open');
+            switchCreateSource('feishu');
+            showToast('飞书授权成功，请重新填写表格链接并点击「从飞书拉取」');
+          }
           else if(pending === 'export') document.querySelector('#syncBitable').click();
         }, 500);
       }
@@ -1769,7 +1808,7 @@
       const token = getFsToken();
       if(!token){ requireFsToken('import'); return; }
       const url = document.querySelector('#feishuUrl').value.trim();
-      if(!url){ showToast('请粘贴飞书表格链接'); return; }
+      if(!url){ showToast('请填写飞书表格分享链接'); return; }
 
       const btn = document.querySelector('#fetchFeishu');
       const originalText = btn.textContent;
@@ -1797,8 +1836,16 @@
           return String(cell);
         }).join('\t')).join('\n');
 
-        document.querySelector('#pasteInput').value = tsv;
-        showToast(`已拉取 ${values.length} 行，请点击「预览并映射列」`);
+        const data = parsePastedTable(tsv);
+        if(data.length === 0){ showToast('未解析到有效表格数据（至少需要表头 + 1 行数据）'); return; }
+        excelData = data;
+        importSourceType = 'feishu';
+        showExcelPreview(data);
+        showColMapping(data);
+        importConfig.style.display = '';
+        const nameInput = document.querySelector('#createTaskName');
+        if(nameInput && !nameInput.value.trim()) nameInput.value = '飞书表格导入任务';
+        showToast(`已拉取 ${data.length} 行，请核对字段映射后点击「创建任务」`);
       } catch(err){
         showToast('拉取失败：' + err.message);
       } finally {
